@@ -1,0 +1,3 @@
+test_images/
+test_videos/
+# 添加的都是官方的测试图片和视频，不需要上传到github，文件详细参见 https://github.com/udacity/CarND-LaneLines-P1

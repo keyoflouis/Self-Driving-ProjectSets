@@ -4,13 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mtimg
 import os
 import numpy as np
-from PyQt5.QtGui.QRawFont import weight
-from keras.src.ops import dtype
-
 from moviepy import VideoFileClip, ImageSequenceClip
-from networkx.classes import edges
-from numpy.ma.core import masked
-from rich.jupyter import display
+
 
 
 def gaussian_blur(image, kerner_size):
@@ -35,56 +30,65 @@ def region_of_interste(img, vertices):
 
     return maksed_image
 
+def draw_lines(line_img,lines):
+    for line in lines:
+        for x1,y1,x2,y2 in line:
+            cv2.line(line_img,(x1,y1),(x2,y2),(255,0,0),5)
+
+
 
 def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
     lines = cv2.HoughLinesP(img, rho, theta, threshold, np.array([]), min_line_len, max_line_gap)
-    line_img = np.zeros((img.shape[0], img.shapep[1], 3), dtype=np.uint8)
-    # draw_lines(line_img,lines)
+    line_img = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
+    draw_lines(line_img,lines)
+
     return line_img
 
 
 def weighted_img(img, initial_img, alpha=0.8, beta=1., y=0.):
-    return cv2.addWeighted(initial_img, alpha, img,beta, y)
+    return cv2.addWeighted(initial_img, alpha, img, beta, y)
 
 
 def process_image(image):
     ysize = image.shape[0]
     xsize = image.shape[1]
 
+    # 高斯模糊和Canny检测
     blur_gray = gaussian_blur(image, 11)
-    edges = canny(blur_gray, 30, 50)
+    edges = canny(blur_gray, 50, 150)
 
+    # 区域蒙版
     apex_y = 3 / 5 * ysize
     vertices = np.array([[(0, ysize), (0.4 * xsize, apex_y), (0.6 * xsize, apex_y), (xsize, ysize)]], dtype=np.int32)
-
     masked_edges = region_of_interste(edges, vertices)
 
-    line_image = hough_lines(masked_edges, 3, np.pi / 180, threshold=10, min_line_len=45, max_line_gap=35)
+    # 霍夫变换检测直线
+    line_image = hough_lines(masked_edges, 3, np.pi / 180, threshold=10, min_line_len=50, max_line_gap=35)
 
-    result = weighted_img(line_image, image,alpha=0.8,beta=1 )
+    # 绘制检测结果到原图片中
+    result = weighted_img(line_image, image, alpha=0.8, beta=1)
 
-    return  result
+    return result
 
 
 if __name__ == "__main__":
     test_image_list = os.listdir("test_images/")
-    #    print(dir(VideoFileClip))
 
     # 处理图片并存取输出图片
     for imageFile in test_image_list:
-        current_left_line = [0, 0, 0, 0]
-        current_right_line = [0, 0, 0, 0]
 
         img = mtimg.imread("test_images/" + imageFile)
         image_output = process_image(img)
 
-        # mpimg.imsave("test_images_output/" + imageFile, image_output)
+        mpimg.imsave("test_images_out/" + imageFile, image_output)
 
-#    current_left_line = [0, 0, 0, 0]
-#    current_right_line = [0, 0, 0, 0]
-#    white_output = 'test_videos_output/solidWhiteRight.mp4'
-#    clip1 = VideoFileClip('test_videos/solidWhiteRight.mp4')
-#
-#    processed_frames = [process_image(frame) for frame in clip1.iter_frames(fps=clip1.fps, dtype='uint8')]
-#    white_clip = ImageSequenceClip(processed_frames, fps=clip1.fps)
-#    white_clip.write_videofile(white_output, fps=clip1.fps, audio=False)
+
+    white_output = 'test_videos_out/solidWhiteRight.mp4'
+    clip1 = VideoFileClip('test_videos/solidWhiteRight.mp4')
+
+    # 将视频转换为clip，再对每一帧进行处理，然后组装回clip
+    processed_frames = [process_image(frame) for frame in clip1.iter_frames(fps=clip1.fps, dtype='uint8')]
+    white_clip = ImageSequenceClip(processed_frames, fps=clip1.fps)
+
+    #输出到文件夹内
+    white_clip.write_videofile(white_output, fps=clip1.fps, audio=False)

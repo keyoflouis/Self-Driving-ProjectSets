@@ -45,3 +45,25 @@
   （如果更改了安装路径，且没有添加环境变量，系统无法自动找到Anaconda的condabin\conda.bat路径,，也无法找到你创建的环境）。
 
 ---
+---
+# 关于项目
+
+###### 项目中的pipeline如下：
+
+灰度+高斯模糊
+
+区域蒙版
+
+霍夫变换检测直线
+
+绘制到原图片中
+
+##### 问题
+
+在 `ColorSelectionQuiz` 中，对于白色区域的选择十分有效，但在后续的处理中，仅仅采用了灰度，（并且灰度是为了Canny检测用的），
+
+###### 结合颜色选择和Canny检测是否会有更好的效果，如何结合呢？
+
+###### 霍夫变换在检测复杂图样时，还能有良好表现么，更好的检测算法？
+
+[Hough Transform | Boundary Detection - YouTube](https://www.youtube.com/watch?v=XRBc_xkZREg&t=2s)

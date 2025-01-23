@@ -1,4 +1,7 @@
+from cProfile import label
+
 import numpy as np
+from PyQt5.sip import enableautoconversion
 from matplotlib import pyplot as plt
 
 # 设置随机种子，可以随意更改以查看不同的解决方案。
@@ -28,11 +31,12 @@ def perceptronStep(X, y, W, b, learn_rate=0.01):
         if y[i] - y_hat == 1:
             W[0] += X[i][0] * learn_rate
             W[1] += X[i][1] * learn_rate
-            b +=learn_rate
+            b += learn_rate
         elif y[i] - y_hat == -1:
             W[0] -= X[i][0] * learn_rate
             W[1] -= X[i][0] * learn_rate
-            b -=learn_rate
+            b -= learn_rate
+
     return W, b
 
 
@@ -44,19 +48,22 @@ def perceptronStep(X, y, W, b, learn_rate=0.01):
 def trainPerceptronAlgorithm(X, y, learn_rate=0.01, num_epochs=25):
     x_min, x_max = min(X.T[0]), max(X.T[0])
     y_min, y_max = min(X.T[1]), max(X.T[1])
+
     W = np.array(np.random.rand(2, 1))
     b = np.random.rand(1)[0] + x_max
+
     # 这些是下面绘制的解线。
     boundary_lines = []
     for i in range(num_epochs):
         # 在每个周期中，使用perceptronStep
         W, b = perceptronStep(X, y, W, b, learn_rate)
         boundary_lines.append((-W[0] / W[1], -b / W[1]))
+
     return boundary_lines
 
 
 # 绘制数据点和边界线
-def plot_decision_boundary(X, y, boundary_lines):
+def plot_decision_boundary_example(X, y, boundary_lines):
     # 绘制点的分布
     for i in range(len(X)):
         if y[i] == 1:
@@ -67,7 +74,8 @@ def plot_decision_boundary(X, y, boundary_lines):
     # 绘制每一次迭代学习的决策边界
     x = np.linspace(0, 1, 100)
     for i, (slope, intercept) in enumerate(boundary_lines):
-        if i % 5 == 0:  # 每过5次迭代绘制一次以提升图像清晰度
+        print(i)
+        if i % 5 == 0:  # 每过5次迭代绘制一次以提升图像准确度
             y_boundary = slope * x + intercept
             plt.plot(x, y_boundary, label=f'Epoch {i + 1}')
 
@@ -78,7 +86,24 @@ def plot_decision_boundary(X, y, boundary_lines):
     plt.show()
 
 
-data_np =np.array([
+def plot_decision_boundary(X, y, boundary_lines):
+    for i in range(len(y)):
+        if y[i] == 1:
+            plt.scatter(X[i][0], X[i][1], color="red", label="class 1" if i == 0 else "")
+        else:
+            plt.scatter(X[i][0], X[i][1], color="blue", label="class 0" if i == 0 else "")
+
+    x = np.linspace(0,1,100)
+
+
+    for i,(slope,intercept) in enumerate( boundary_lines):
+        y = x * slope + intercept
+        plt.plot(x,y,label= f'Epoch{i +1}')
+
+    plt.legend()
+    plt.show()
+
+data_np = np.array([
     [0.78051, -0.063669, 1],
     [0.28774, 0.29139, 1],
     [0.40714, 0.17878, 1],
@@ -181,10 +206,10 @@ data_np =np.array([
     [0.51912, 0.62359, 0]
 ])
 
-X =data_np[:,:2]
-y =data_np[:,2]
+# 选择行与列，X是前两列(即为0-1)，Y是索引为2的列
+X = data_np[:, :2]
+y = data_np[:, 2]
 
-boundary_lines = []
+boundary_lines = trainPerceptronAlgorithm(X, y)
 
-boundary_lines = trainPerceptronAlgorithm(X,y)
-
+plot_decision_boundary(X,y, boundary_lines)

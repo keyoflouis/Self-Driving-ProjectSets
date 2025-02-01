@@ -9,7 +9,7 @@
 
 - 第一个quiz，是使用miniflow创建的一个加法神经网络，nn.py 以及 miniflow.py
 
-- [x] 拓扑排序的实现，必须理解
+- [x] 复习拓扑排序的实现，必须理解
 
 ###### nn_op.py 以及  miniflow_op.py 是基于第一个quiz的 bonus challenge
 
@@ -33,7 +33,12 @@
 
 ---
 
-#### 第四个quiz，sigmoid
+#### 第四个quiz，Sigmoid
 
 - 第四个quiz，实现sigmoid函数
 
+#### 第五个quiz，Cost
+
+- 第五个quiz，实现平均方差函数
+
+- [ ] 复习矩阵，向量

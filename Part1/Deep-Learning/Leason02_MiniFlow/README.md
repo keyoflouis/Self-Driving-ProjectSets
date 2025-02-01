@@ -1,4 +1,9 @@
-#### Add目录
+
+## 目录
+
+---
+
+#### Add
 
 ###### 第一个quiz 加法神经网络 
 
@@ -10,7 +15,7 @@
 
 ---
 
-##### LinerNN
+#### LinerNN
 
 ###### 第二个quiz，关于Liner 的quiz
 
@@ -25,3 +30,10 @@
 #### topologicalsort
 
 - 列举了DFS拓扑排序的实现和kahn's algorithm实现
+
+---
+
+#### 第四个quiz，sigmoid
+
+- 第四个quiz，实现sigmoid函数
+

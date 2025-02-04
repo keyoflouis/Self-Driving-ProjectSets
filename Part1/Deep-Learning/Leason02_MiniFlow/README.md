@@ -13,6 +13,8 @@
 
 ###### nn_op.py 以及  miniflow_op.py 是基于第一个quiz的 bonus challenge
 
+- 输入任意大小的节点
+
 ---
 
 #### LinerNN
@@ -52,3 +54,7 @@
 - 实现反向传播
 
 - [ ] 始终有些不理解，尝试复写一遍。
+
+#### 第八个quiz，SGD
+
+-  波士顿房价改为加州房价预测 `data = fetch_california_housing()`

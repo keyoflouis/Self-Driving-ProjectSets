@@ -32,6 +32,7 @@ b1_ = np.zeros(n_hidden)
 W2_ = np.random.randn(n_hidden, 1)
 b2_ = np.zeros(1)
 
+
 # Neural network
 X, y = Input(), Input()
 W1, b1 = Input(), Input()
@@ -51,7 +52,7 @@ feed_dict = {
     b2: b2_
 }
 
-epochs = 20
+epochs = 10
 # 训练样本数
 m = X_.shape[0]
 batch_size = 11

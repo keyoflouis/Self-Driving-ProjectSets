@@ -107,7 +107,7 @@ class Linear(Node):
             # Set the partial of the loss with respect to this node's bias.
             self.gradients[self.inbound_nodes[2]] += np.sum(grad_cost, axis=0, keepdims=False)
 
-
+# Sigmoid 的输出为 11 * 10
 class Sigmoid(Node):
     """
     Represents a node that performs the sigmoid activation function.
@@ -145,7 +145,7 @@ class Sigmoid(Node):
             sigmoid = self.value
             self.gradients[self.inbound_nodes[0]] += sigmoid * (1 - sigmoid) * grad_cost
 
-
+# 输出为标量 1*1
 class MSE(Node):
     def __init__(self, y, a):
         """

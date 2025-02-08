@@ -43,3 +43,7 @@ X_ = (X_ - np.mean(X_, axis=0)) / np.std(X_, axis=0)
 - `(X_ - np.mean(X_, axis=0)) / np.std(X_, axis=0)` 对每个特征列进行标准化。
 
 这样，`X_` 中的每个特征列都会被标准化为均值为0、标准差为1的分布。
+
+### 关于矩阵求梯度
+
+[矩阵求导术（上） - 知乎](https://zhuanlan.zhihu.com/p/24709748)

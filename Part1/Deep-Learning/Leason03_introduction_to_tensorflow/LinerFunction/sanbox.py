@@ -77,6 +77,9 @@
 # # Print loss
 # print('Loss: {}'.format(l))
 
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 3 = INFO, WARNING, and ERROR messages are not printed
+
 import tensorflow as tf
 import numpy as np
 
@@ -97,10 +100,10 @@ def mnist_features_labels(n_labels):
     # 加载MNIST数据集
     (train_images, train_labels), (_, _) = tf.keras.datasets.mnist.load_data()
 
-    # 归一化并reshape
+    # 归一化并reshape,shape 60000,748
     train_images = train_images.reshape((-1, 784)).astype('float32') / 255.0
 
-    # 转换为one-hot编码
+    # 转换为one-hot编码,shape 60000,
     train_labels = tf.keras.utils.to_categorical(train_labels, num_classes=10)
 
     # 打乱数据并取前10000个样本

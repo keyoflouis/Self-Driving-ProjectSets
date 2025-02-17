@@ -1,11 +1,10 @@
-
 ## 目录
 
 ---
 
 #### Add
 
-###### 第一个quiz 加法神经网络 
+###### 第一个quiz 加法神经网络
 
 - 第一个quiz，是使用miniflow创建的一个加法神经网络，nn.py 以及 miniflow.py
 
@@ -57,4 +56,4 @@
 
 #### 第八个quiz，SGD
 
--  波士顿房价改为加州房价预测 `data = fetch_california_housing()`
+- 波士顿房价改为加州房价预测 `data = fetch_california_housing()`

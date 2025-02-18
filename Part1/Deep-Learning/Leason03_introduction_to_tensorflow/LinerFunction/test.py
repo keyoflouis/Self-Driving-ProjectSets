@@ -5,6 +5,10 @@
 
 import numpy as np
 import tensorflow as tf
+
+from LinerFunction.sanbox import optimizer
+
+
 def get_weights(n_features,n_labels):
     return tf.Variable(tf.random.normal([n_features,n_labels],stddev=0.1))
 
@@ -35,6 +39,7 @@ def mnist_feature_label(n_labels):
     sampled_labels = train_labels[sampled_indices]
 
     # 取所有lable的前三个元素的any，得到一个和label同大小的mask数组，用于过滤出0,1,2这三个数字
+    # axis = 0表示沿着行，axis =1表示沿着列进行操作
     mask = np.any(sampled_labels[:, :n_labels], axis=1)
     filtered_images = sampled_images[mask]
     filtered_labels = sampled_labels[mask][:, :n_labels]
@@ -44,14 +49,27 @@ def mnist_feature_label(n_labels):
 
 n_features = 784
 n_labels = 3
-
 train_features, train_labels = mnist_feature_label(n_labels)
 
+# 转换为张量
 features = tf.convert_to_tensor(train_features, dtype=tf.float32)
 labels = tf.convert_to_tensor(train_labels, dtype=tf.float32)
 
+# 初始化权重和偏差
 w =get_weights(n_features,n_labels)
-
 b =get_biases(n_labels)
 
+with tf.GradientTape() as tape:
+    logits =linear(features,w,b)
 
+    # 损失函数为什么要先算交叉熵softmax_cross_entropy_with_logits，再算平均值reduce_mean
+    loss = tf.reduce_mean(
+        tf.nn.softmax_cross_entropy_with_logits( logits=logits,labels=labels))
+
+# 自动求w和b的梯度
+gradients = tape.gradient(loss,[w,b])
+
+# apply_gradients是什么，为什么要对gradients以及[w,b]打包才能apply
+optimizer.apply_gradients(zip(gradients,[w,b]))
+
+print('Loss: {:.4f}'.format(loss.numpy()))

@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="carnd-term1" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="carnd-term1" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="test_tensorflow" project-jdk-type="Python SDK" />
 </project>

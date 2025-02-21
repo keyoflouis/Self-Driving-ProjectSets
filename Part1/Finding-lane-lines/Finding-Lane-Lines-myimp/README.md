@@ -1,5 +1,3 @@
-
-
 ### 配置 PyCharm 使用 Conda 环境
 
 #### 步骤 1：打开 PyCharm 中的 Python 项目
@@ -45,7 +43,9 @@
   （如果更改了安装路径，且没有添加环境变量，系统无法自动找到Anaconda的condabin\conda.bat路径,，也无法找到你创建的环境）。
 
 ---
+
 ---
+
 # 关于项目
 
 ###### 项目中的pipeline如下：

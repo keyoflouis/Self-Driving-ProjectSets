@@ -6,7 +6,7 @@
 
 本次quiz里面用到了我不熟悉的softmax来分类。
 
-- [ ] 完成test.py的todo
+- [ ] 完成test.py的todo，test.py中的问题很重要
 
 ---
 ---

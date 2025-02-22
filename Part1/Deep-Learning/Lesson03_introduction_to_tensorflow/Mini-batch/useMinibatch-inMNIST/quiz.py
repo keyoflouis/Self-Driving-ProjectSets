@@ -5,9 +5,6 @@ import numpy as np
 (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data()
 
 
-# 检查TensorFlow是否看到GPU
-print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
-
 
 # 预处理
 def preprocess(images, labels):
@@ -20,11 +17,11 @@ test_features, test_labels = preprocess(test_images, test_labels)
 
 
 # 参数设置
-learning_rate = 0.01  # 增大学习率
+learning_rate = 0.05  # 增大学习率
 batch_size = 128
 n_input = 784
 n_classes = 10
-epochs = 1  # 增加训练轮数
+epochs = 20  # 增加训练轮数
 
 # 定义模型参数
 weights = tf.Variable(tf.random.normal([n_input, n_classes], dtype=tf.float32))  # 使用 tf.float32

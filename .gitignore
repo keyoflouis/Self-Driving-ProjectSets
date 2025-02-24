@@ -1,2 +1,5 @@
 Official-Metirials/
 **.zip
+
+**/checkpoint
+**/*_model.ckpt.*

@@ -3,3 +3,6 @@ Official-Metirials/
 
 **/checkpoint
 **/*_model.ckpt.*
+
+**/.idea
+**/__pycache__

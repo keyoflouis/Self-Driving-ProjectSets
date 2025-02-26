@@ -5,7 +5,6 @@ import numpy as np
 (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data()
 
 
-
 # 预处理
 def preprocess(images, labels):
     features = images.reshape((-1, 784)).astype(np.float32) / 255.0  # 展平并归一化

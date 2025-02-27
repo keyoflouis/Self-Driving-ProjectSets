@@ -22,8 +22,12 @@ dataset = tf.data.Dataset.range(10)  # 创建一个包含0到9的数据集
 # 将数据集中的元素组合成批次，每个批次包含2个元素
 dataset = dataset.batch(2)
 
+for i in dataset :
+    print(i.numpy())
+
 # 迭代数据集并访问每个批次
-for batch in dataset:
-    print(batch.numpy())  # 将Tensor转换为NumPy数组并打印
+#for batch in dataset:
+#    print(batch.numpy())  # 将Tensor转换为NumPy数组并打印
+
 
 

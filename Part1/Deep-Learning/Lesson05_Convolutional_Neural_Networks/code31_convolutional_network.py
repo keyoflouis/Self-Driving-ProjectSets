@@ -45,7 +45,7 @@ class CNN(Model):
 
 # 初始化模型、优化器和损失函数
 model = CNN()
-optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
+optimizer = tf.keras.optimizers.SGD(learning_rate=0.05)
 loss_fn = tf.keras.losses.CategoricalCrossentropy()
 
 # 训练参数

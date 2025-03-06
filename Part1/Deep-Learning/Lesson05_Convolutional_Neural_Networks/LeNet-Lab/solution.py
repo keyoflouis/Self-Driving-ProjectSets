@@ -1,3 +1,6 @@
+import random
+
+from matplotlib import pyplot as plt
 from tensorflow.keras.datasets import mnist
 import numpy as np
 import tensorflow as tf
@@ -26,6 +29,15 @@ print("\n图像形状: {}".format(X_train[0].shape))
 print("训练集:   {} 样本".format(len(X_train)))
 print("验证集: {} 样本".format(len(X_val)))
 print("测试集:       {} 样本".format(len(X_test)))
+
+# 可视化数据
+index = random.randint(0, len(X_train)-1)
+image = X_train[index].squeeze()
+plt.figure(figsize=(1,1))
+plt.imshow(image, cmap="gray")
+plt.show()
+print("样本标签:", Y_train[index])
+
 
 # TODO 构建LeNet模型
 def LeNet():

@@ -10,4 +10,5 @@ Official-Metirials/
 **/test_img
 **/traffic-signs-data
 
-**/Lesson09_Transfer_Learning/AlexNet
+**/Lesson09_Transfer_Learning/AlexNet/train.p
+**/Lesson09_Transfer_Learning/AlexNet/MyImplement/bvlc-alexnet.npy

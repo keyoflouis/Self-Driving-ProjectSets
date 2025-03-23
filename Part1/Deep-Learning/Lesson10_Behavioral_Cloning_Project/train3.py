@@ -1,3 +1,4 @@
+from matplotlib import pyplot as plt
 from tensorflow.keras import layers, Model
 import tensorflow as tf
 import numpy as np
@@ -145,6 +146,17 @@ BATCH_SIZE = 64
 train_dataset = train_dataset.batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
 test_dataset = test_dataset.batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
 
+
+
+
+# 绘制转向角分布直方图
+steering_angles = []
+for sample in train_dataset.unbatch():
+    steering_angles.append(sample[1].numpy())
+plt.hist(steering_angles, bins=50)
+plt.title("Steering Angle Distribution")
+plt.show()
+
 # 收集转向角数据
 steering_angles = []
 for sample in train_dataset.unbatch():
@@ -222,6 +234,7 @@ print(f"最小转向角: {np.min(steering_angles):.4f}")
 print(f"最大转向角: {np.max(steering_angles):.4f}")
 print(f"|θ| < 0.1 样本占比: {np.mean(np.abs(steering_angles) < 0.1) * 100:.2f}%")
 print(f"|θ| > 0.4 样本占比: {np.mean(np.abs(steering_angles) > 0.4) * 100:.2f}%")
+
 
 
 def build_model(input_shape=(160, 320, 3)):

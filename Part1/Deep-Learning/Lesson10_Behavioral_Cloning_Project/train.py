@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 import os
 
@@ -78,6 +79,83 @@ combined_dataset = combined_dataset.shuffle(buffer_size=total_samples)
 train_dataset = combined_dataset.take(train_size).shuffle(1024).batch(32).prefetch(tf.data.AUTOTUNE)
 val_dataset = combined_dataset.skip(train_size).batch(32).prefetch(tf.data.AUTOTUNE)
 
+# 收集转向角数据
+steering_angles = []
+for sample in train_dataset.unbatch():
+    steering_angles.append(sample[1].numpy())
+steering_angles = np.array(steering_angles)
+
+# 统计0值样本数量
+count_zero = np.sum(steering_angles == 0)
+
+# 使用numpy计算直方图数据（保持区间总数不变）
+hist_counts, bin_edges = np.histogram(
+    steering_angles,
+    bins=50,
+    range=(-1.0, 1.0)
+)
+
+# 找到包含0值的区间索引
+zero_bin_index = None
+for i in range(len(bin_edges) - 1):
+    if bin_edges[i] <= 0 < bin_edges[i + 1]:
+        zero_bin_index = i
+        break
+
+# 调整直方图计数：从原区间扣除0值样本
+if zero_bin_index is not None and count_zero > 0:
+    hist_counts[zero_bin_index] -= count_zero
+
+# 打印数据分布
+print("直方图区间分布 [左边界, 右边界) : 样本数量 占比")
+print(f"{'转向区间':<25} | {'样本数量':<8} | {'占比 (%)':<6}")
+print("-" * 45)
+
+total_samples = len(steering_angles)
+for i in range(len(hist_counts)):
+    left = bin_edges[i]
+    right = bin_edges[i + 1]
+    count = hist_counts[i]
+    percent = (count / total_samples) * 100
+
+    # 特殊处理包含0值的区间
+    if i == zero_bin_index and count_zero > 0:
+        # 打印非零部分
+        range_str = f"[{left:.4f}, {right:.4f})"
+        if abs(left) < 0.1:
+            range_str += " (直行)"
+        elif left > 0.3:
+            range_str += " (急右转)"
+        elif right < -0.3:
+            range_str += " (急左转)"
+
+        print(f"{range_str:<25} | {count:<8} | {percent:.2f}%")
+
+        # 单独打印0值区间
+        zero_percent = (count_zero / total_samples) * 100
+        print(f"[0.0000, 0.0000) (直行)       | {count_zero:<8} | {zero_percent:.2f}%")
+    else:
+        # 正常打印其他区间
+        range_str = f"[{left:.4f}, {right:.4f})"
+        if abs(left) < 0.1:
+            range_str += " (直行)"
+        elif left > 0.3:
+            range_str += " (急右转)"
+        elif right < -0.3:
+            range_str += " (急左转)"
+
+        print(f"{range_str:<25} | {count:<8} | {percent:.2f}%")
+
+# 扩展统计摘要（保持原样）
+print("\n关键统计：")
+print(f"总样本数: {total_samples}")
+print(f"中位数: {np.median(steering_angles):.4f}")
+print(f"均值: {np.mean(steering_angles):.4f}")
+print(f"标准差: {np.std(steering_angles):.4f}")
+print(f"最小转向角: {np.min(steering_angles):.4f}")
+print(f"最大转向角: {np.max(steering_angles):.4f}")
+print(f"|θ| < 0.1 样本占比: {np.mean(np.abs(steering_angles) < 0.1) * 100:.2f}%")
+print(f"|θ| > 0.4 样本占比: {np.mean(np.abs(steering_angles) > 0.4) * 100:.2f}%")
 
 
 
@@ -107,6 +185,6 @@ model = tf.keras.Sequential([
     tf.keras.layers.Dense(1)
 ])
 
-model.compile(loss='mse', optimizer='adam')
-model.fit(train_dataset, validation_data=val_dataset, epochs=5)
-model.save('model.h5')
+# model.compile(loss='mse', optimizer='adam')
+# model.fit(train_dataset, validation_data=val_dataset, epochs=5)
+# model.save('model.h5')

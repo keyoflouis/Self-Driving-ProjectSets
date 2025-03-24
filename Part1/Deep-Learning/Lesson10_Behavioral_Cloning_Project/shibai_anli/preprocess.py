@@ -5,7 +5,7 @@ from pandas import read_csv
 
 balanced = pd.DataFrame()
 bins = 1000
-bin_n = 200
+bin_n = 300
 
 df = read_csv("../data/driving_log.csv")
 

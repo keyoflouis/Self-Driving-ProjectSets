@@ -141,8 +141,11 @@ def prepare_inputs(raw_image, speed):
     if img_array.shape != EXPECTED_IMAGE_SHAPE:
         raise ValueError(f"输入图像尺寸错误: 应为 {EXPECTED_IMAGE_SHAPE}，实际为 {img_array.shape}")
 
+    cropped = img_array[60:-25, :, :]
+    resize = tf.image.resize(cropped,(32,128)).numpy()
     # 应用与训练相同的归一化
-    normalized = (img_array.astype(np.float32) / 255.0) - 0.5
+    # normalized = (img_array.astype(np.float32) / 255.0) - 0.5
+    normalized = (resize.astype(np.float32)/255.0)-0.5
 
     # 构建模型输入 (注意顺序与模型定义一致)
     return [
@@ -206,12 +209,12 @@ if __name__ == '__main__':
         model = tf.keras.models.load_model(args.model)
         print("✔ 成功加载包含预处理层的模型")
 
-        # 验证关键预处理层存在
-        required_layers = ['cropping2d', 'resizing']
-        model_layers = [layer.name.lower() for layer in model.layers]
-        for layer_name in required_layers:
-            if layer_name not in model_layers:
-                raise ValueError(f"模型缺少必要层: {layer_name}")
+        # # 验证关键预处理层存在
+        # required_layers = ['cropping2d', 'resizing']
+        # model_layers = [layer.name.lower() for layer in model.layers]
+        # for layer_name in required_layers:
+        #     if layer_name not in model_layers:
+        #         raise ValueError(f"模型缺少必要层: {layer_name}")
 
     except Exception as e:
         print(f"❌ 模型加载失败: {str(e)}")
@@ -229,3 +232,73 @@ if __name__ == '__main__':
     # 启动服务器
     app = socketio.Middleware(sio, app)
     eventlet.wsgi.server(eventlet.listen(('', 4567)), app)
+#
+# import argparse
+# import base64
+#
+# import numpy as np
+# import socketio
+# import eventlet.wsgi
+# from PIL import Image
+# from flask import Flask
+# from io import BytesIO
+# import os
+# import tensorflow as tf
+# from tensorflow.keras.models import load_model  # 修改点1: 导入load_model
+# import warnings
+#
+# sio = socketio.Server()
+# app = Flask(__name__)
+# model = None
+# prev_image_array = None
+#
+#
+# def preprocess(image, top_offset=.375, bottom_offset=.125):
+#     top = int(top_offset * image.shape[0])
+#     bottom = int(bottom_offset * image.shape[0])
+#     image = tf.image.resize(image[top:-bottom, :], (32, 128, 3))
+#     return image
+#
+#
+# @sio.on('telemetry')
+# def telemetry(sid, data):
+#     steering_angle = data["steering_angle"]
+#     throttle = data["throttle"]
+#     speed = data["speed"]
+#     imgString = data["image"]
+#     image = Image.open(BytesIO(base64.b64decode(imgString)))
+#     image_array = preprocess(np.asarray(image))
+#     transformed_image_array = image_array[None, :, :, :]
+#
+#     prediction = model.predict(transformed_image_array, batch_size=1)
+#     steering_angle = float(prediction[0][0])
+#
+#     throttle = .2 if float(speed) > 5 else 1.
+#     print(steering_angle, throttle)
+#     send_control(steering_angle, throttle)
+#
+#
+# @sio.on('connect')
+# def connect(sid, environ):
+#     print("connect ", sid)
+#     send_control(0, 0)
+#
+#
+# def send_control(steering_angle, throttle):
+#     sio.emit("steer", data={
+#         'steering_angle': steering_angle.__str__(),
+#         'throttle': throttle.__str__()
+#     }, skip_sid=True)
+#
+#
+# if __name__ == '__main__':
+#     parser = argparse.ArgumentParser(description='Remote Driving')
+#     # 修改点2: 更新帮助信息说明为H5文件路径
+#     parser.add_argument('model', type=str, help='Path to model H5 file.')
+#     args = parser.parse_args()
+#
+#     # 修改点3: 直接加载H5模型，删除JSON和权重加载步骤
+#     model = load_model(args.model)
+#
+#     app = socketio.Middleware(sio, app)
+#     eventlet.wsgi.server(eventlet.listen(('', 4567)), app)

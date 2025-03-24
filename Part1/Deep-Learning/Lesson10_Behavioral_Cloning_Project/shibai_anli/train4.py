@@ -259,12 +259,12 @@ model = tf.keras.Sequential([
     tf.keras.layers.Dense(1)
 ])
 
-model.compile(loss='mse', optimizer='adam', metrics=['mae'])
-
-# 训练时只使用训练集
-history_object = model.fit(train_dataset, validation_data=test_dataset, epochs=30)
-
-model.save('model.h5')
+# model.compile(loss='mse', optimizer='adam', metrics=['mae'])
+#
+# # 训练时只使用训练集
+# history_object = model.fit(train_dataset, validation_data=test_dataset, epochs=30)
+#
+# model.save('model.h5')
 
 # # 带梯度裁剪的优化器
 # optimizer = tf.keras.optimizers.Adam(

@@ -10,6 +10,7 @@ image = mping.imread("IGNORE/signs_vehicles_xygrad.png")
 
 ksize = 3
 
+# 筛选同时在x和y方向上都有梯度值，或者满足梯度在某个方向，且值位于某个区间的图像
 gradx = abs_sobel_thresh(image, orient='x', thresh=(20, 100))
 grady = abs_sobel_thresh(image, orient='y', thresh=(20, 100))
 mag_binary = mag_thresh(image, sobel_kernel=ksize, mag_thres=(30, 100))

@@ -4,17 +4,18 @@ import matplotlib.image as mping
 import matplotlib.pyplot as plt
 
 def mag_thresh(img, sobel_kernel=3, mag_thres=(0, 255)):
+    ''' 计算图像梯度的数值大小 '''
+
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
+    # 计算图像梯度数值大小
     sobel_x = cv2.Sobel(gray, cv2.CV_64F, dx=1, dy=0, ksize=sobel_kernel)
     sobel_y = cv2.Sobel(gray, cv2.CV_64F, dx=0, dy=1, ksize=sobel_kernel)
-
     magnitude = np.sqrt(np.square(sobel_x) + np.square(sobel_y))
-
     abs_mag = np.uint8(magnitude * 255 / np.max(magnitude))
 
+    # 阈值
     mask = np.zeros_like(abs_mag)
-
     mask[(abs_mag >= mag_thres[0]) & (abs_mag <= mag_thres[1])] = 1
 
     return mask

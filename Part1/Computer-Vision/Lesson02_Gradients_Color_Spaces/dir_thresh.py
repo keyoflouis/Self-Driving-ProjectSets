@@ -3,11 +3,14 @@ import cv2
 import matplotlib.pyplot as plt
 import matplotlib.image as mping
 
+
 def dir_threshold(img, sobel_kernel=3, thresh=(0, np.pi / 2)):
+    ''' 通过反正切计算图像中梯度方向，并筛选 '''
+
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
-    sobelx = cv2.Sobel(gray, cv2.CV_64F, dx=1, dy=0,ksize=sobel_kernel)
-    sobely = cv2.Sobel(gray, cv2.CV_64F, dx=0, dy=1,ksize=sobel_kernel)
+    sobelx = cv2.Sobel(gray, cv2.CV_64F, dx=1, dy=0, ksize=sobel_kernel)
+    sobely = cv2.Sobel(gray, cv2.CV_64F, dx=0, dy=1, ksize=sobel_kernel)
 
     abs = np.arctan2(np.abs(sobely), np.abs(sobelx))
     binary_out = np.zeros_like(abs)
@@ -15,7 +18,8 @@ def dir_threshold(img, sobel_kernel=3, thresh=(0, np.pi / 2)):
 
     return binary_out
 
-if __name__ =="__main__":
+
+if __name__ == "__main__":
     image = mping.imread("IGNORE/signs_vehicles_xygrad.png")
     grad_binary = dir_threshold(image, sobel_kernel=15, thresh=(0.7, 1.3))
 
@@ -30,4 +34,3 @@ if __name__ =="__main__":
 
     plt.subplots_adjust(left=0., right=1, top=0.9, bottom=0.)
     plt.show()
-

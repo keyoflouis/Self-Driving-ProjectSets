@@ -34,7 +34,7 @@ def measure_curvature_pixels():
     y_eval = np.max(ploty)
 
 
-    ##### 待实现：曲率半径计算 #####
+    ##### 曲率半径计算 #####
     left_curverad = ((1 + (2 * left_fit[0] * y_eval+ left_fit[1]) ** 2) ** (3 / 2)) / (2 * left_fit[0])  # 左车道线计算
 
     right_curverad = ((1 + (2 * right_fit[0] * y_eval+ right_fit[1]) ** 2) ** (3 / 2)) / (2 * right_fit[0])   # 右车道线计算

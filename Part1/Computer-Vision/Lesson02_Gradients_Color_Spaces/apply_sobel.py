@@ -4,6 +4,7 @@ import matplotlib.image as mping
 import matplotlib.pyplot as plt
 
 def abs_sobel_thresh(img, orient='x', thresh=(0,255)):
+    ''' 计算x/y方向的梯度 '''
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
     if orient == 'x':
@@ -16,7 +17,6 @@ def abs_sobel_thresh(img, orient='x', thresh=(0,255)):
 
     # masked = [1 if (i > thresh_min and i<thresh_max) else 0 for i in sobel]
     binary_output = np.zeros_like(sobel)
-
     binary_output[(sobel >= thresh[0]) & (sobel <= thresh[1])] = 1
 
     return np.copy(binary_output)
@@ -24,7 +24,7 @@ def abs_sobel_thresh(img, orient='x', thresh=(0,255)):
 if __name__ =="__main__":
     image = mping.imread('./IGNORE/signs_vehicles_xygrad.png')
 
-    grad_binary = abs_sobel_thresh(image, orient='y', thresh_min=20, thresh_max=100)
+    grad_binary = abs_sobel_thresh(image, orient='x', thresh=(20,100))
 
     f, (ax1, ax2) = plt.subplots(1, 2, figsize=(24, 9))
     f.tight_layout()

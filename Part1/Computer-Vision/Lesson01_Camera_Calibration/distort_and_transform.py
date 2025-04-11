@@ -63,11 +63,11 @@ def corners_unwarp(img, nx, ny, mtx, dist):
     if ret == True:
         cv2.drawChessboardCorners(undist, (nx, ny), corners, ret)
 
-        # 变换后的边界
+        # perspective 变换后边界与图片的距离与尺寸
         offset = 200
         img_size = (gray.shape[1], gray.shape[0])
 
-        # 源点：提取检测到的四个外围角点（A，B，C，D）
+        # 源点：提取检测到的四个点（A，B，C，D）
         src = np.float32([corners[0], corners[nx-1], corners[-1], corners[-nx]])
 
         # dst：设置变换后（A，B，C，D）在原图大小的图片中的位置

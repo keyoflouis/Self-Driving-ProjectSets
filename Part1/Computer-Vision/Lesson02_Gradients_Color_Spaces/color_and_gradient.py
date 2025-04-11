@@ -14,11 +14,10 @@ def pipeline(img, s_thresh=(170, 255), sx_thresh=(20, 100)):
     l_channel = hls[:, :, 1]
     s_channel = hls[:, :, 2]
 
+    # 对l通道检测x方向梯度，并且阈值处理
     sobelx = cv2.Sobel(l_channel, cv2.CV_64F, 1, 0)
     abs_sobelx = np.abs(sobelx)
     scaled_sobel = np.uint8(255 * abs_sobelx / np.max(abs_sobelx))
-
-    # 对l通道检测x方向梯度，并且阈值处理
     sxbinary = np.zeros_like(scaled_sobel)
     sxbinary[(scaled_sobel >= sx_thresh[0]) & (scaled_sobel <= sx_thresh[1])] = 1
 

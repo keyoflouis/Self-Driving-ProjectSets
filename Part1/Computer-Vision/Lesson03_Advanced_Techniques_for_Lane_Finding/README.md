@@ -18,3 +18,5 @@
 
 gene_data 生成模拟数据
 
+lane_historgram.py 统计道路中二值像素点的分布
+

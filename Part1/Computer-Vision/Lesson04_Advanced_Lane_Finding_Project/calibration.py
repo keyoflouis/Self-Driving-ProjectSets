@@ -35,22 +35,20 @@ def gene_pkl():
 
     ret, mtx, dist, rvecs, tves = cv2.calibrateCamera(obj_points, image_points, gray_shape, None, None)
 
-    with open('calibration.pkl', 'wb') as f:
+    with open('IGNORE/output_images/calibration.pkl', 'wb') as f:
         pickle.dump({"mtx": mtx, "dist": dist}, f)
 
 
 
-def calibrate(path):
-    ''' 返回RGB,相机矫正后的图片 '''
+def calibrate(img):
+    ''' 读取图片，返回相机矫正后的RGB图片 '''
 
-    with open('calibration.pkl', 'rb') as f:
+    with open('IGNORE/output_images/calibration.pkl', 'rb') as f:
         cal = pickle.load(f)
 
     mtx = cal["mtx"]
     dist = cal["dist"]
 
-    img =cv2.imread(path)
-    img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
     dst = cv2.undistort(img,mtx,dist,None,mtx)
 
     if __name__ == "__main__":
@@ -68,5 +66,6 @@ def calibrate(path):
 
 if __name__ =="__main__":
 
-    path = "IGNORE/test_images/test6.jpg"
-    calibrate(path)
+    # path = "IGNORE/test_images/test6.jpg"
+    # calibrate(path)
+    gene_pkl()

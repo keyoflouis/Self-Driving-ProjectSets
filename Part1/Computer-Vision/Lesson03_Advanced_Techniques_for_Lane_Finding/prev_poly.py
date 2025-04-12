@@ -13,10 +13,11 @@ right_fit = np.array([4.17622148e-04, -4.93848953e-01, 1.11806170e+03])
 
 
 def fit_poly(img_shape, leftx, lefty, rightx, righty):
+    '''返回拟合的车道线的xy的值 '''
     left_fit = np.polyfit(lefty, leftx, 2)
     right_fit = np.polyfit(righty, rightx, 2)
 
-    # 生成用于绘制的 x 和 y 值,(开始，结束，数组长度（确保每一个像素行都有一个对应的点）)
+    # 生成y值，使用所有y值来生成所有x值，得到图片中的拟合车道线(开始，结束，数组长度（确保每一个像素行都有一个对应的点）)
     ploty = np.linspace(0, img_shape[0] - 1, img_shape[0])
 
     left_fitx = left_fit[0] * ploty ** 2 + left_fit[1] * ploty + left_fit[2]
@@ -40,7 +41,7 @@ def search_around_poly(binary_warped):
     right_lane_inds = ((nonzerox > (right_fit[0] * (nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[2] - margin))
                     & (nonzerox < (right_fit[0] * (nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[2] + margin)))
 
-    # 提取左右车道线像素位置
+    # 提取左右车道线所有像素的xy位置
     leftx = nonzerox[left_lane_inds]
     lefty = nonzeroy[left_lane_inds]
     rightx = nonzerox[right_lane_inds]

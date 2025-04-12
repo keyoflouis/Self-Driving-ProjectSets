@@ -12,48 +12,62 @@ window_height = 80  # 窗口高度，将图像分为9个垂直层，因为图像
 margin = 100  # 左右滑动搜索的范围
 
 
-def window_mask(width, height, img_ref, center, level):
-    # eg：在第0层（最底层），窗口垂直范围为 720-80 * 1 到 720（即640到720），水平范围为中心±25。
+# 代码中的的width/2，有两种意思
+# 在find_window_centroids主要是用于修正卷积得到的索引偏差，或者修正右半边数组的索引
+# 在window_mask中，用来根据中心生成（高为每层的高度，左width/2，右width/2）的窗口区域。
 
+def window_mask(width, height, img_ref, center, level):
+    ''' 返回绘制窗口 '''
+
+    # eg：在第0层（最底层），窗口垂直范围为 720-80 * 1 到 720（即640到720），水平范围为中心±25。
     # 创建一个与图像大小相同的零矩阵
     output = np.zeros_like(img_ref)
-    # 在指定的窗口区域内填充1
+    # 通过限定窗口的高来确认第几层，通过限定宽来确认水平位置±25的位置，在指定的窗口区域内填充1
     output[int(img_ref.shape[0] - (level + 1) * height):int(img_ref.shape[0] - level * height),
     max(0, int(center - width / 2)):min(int(center + width / 2), img_ref.shape[1])] = 1
     return output
 
 
 def find_window_centroids(image, window_width, window_height, margin):
-    # 存储每个层的（左，右）窗口质心位置
+    ''' 返回左右车道线的中心位置 '''
+
+    # 存储每个层的（左，右）窗口质心位置（即车道线中心位置）
     window_centroids = []
+
+    # 一维数组卷积核（对统计像素点的一维数组做卷积）
     window = np.ones(window_width)
 
     # 垂直切4片，取底部的一片（靠近车辆）的左半部分求和，找到最密集的列作为左车道起点。
     # 卷积操作增强车道线区域的信号，找到峰值位置。
     l_sum = np.sum(image[int(3 * image.shape[0] / 4):, :int(image.shape[1] / 2)], axis=0)
 
-    # 这里使用的full卷积，卷积核的尺寸在这里是window，默认会在
+    # 这里使用的full卷积，卷积核的尺寸在这里是window
     temp_l = np.convolve(window, l_sum)
+
+    # 得到车道线在数组（统计像素点个数的一维数组）的索引
+    # 一维数组的左右两侧因为full卷积中各添加了window_width - 1个零
+    # 左侧添加的window_width-1个0，导致卷积后结果出现（window_with/2）-1的索引偏移。
     l_center = np.argmax(temp_l) - window_width / 2
 
     r_sum = np.sum(image[int(3 * image.shape[0] / 4):, int(image.shape[1] / 2):], axis=0)
     temp_r = np.convolve(window, r_sum)
     r_center = np.argmax(temp_r) - window_width / 2 + int(image.shape[1] / 2)
 
-    # 添加第一层找到的位置
+    # 添加第一层找到的，最多像素点的元素在数组（统计像素点个数的一维数组）的索引
     window_centroids.append((l_center, r_center))
 
-    # 遍历剩余所有层，寻找最大像素位置
+    # 遍历剩余所有层，寻找索引
     for level in range(1, int(image.shape[0] / window_height)):
-        # 对图像的垂直切片进行卷积
+        # 对图像的垂直切片,并得到统计像素点个数的一维数组
         image_layer = np.sum(
-            # 窗口顶部：窗口底部
+            # image[窗口顶部：窗口底部，]
             image[int(image.shape[0] - (level + 1) * window_height): int(image.shape[0] - level * window_height), :],
             axis=0)
-        # 卷积
+
+        # 对数组（统计像素点个数的一维数组）卷积
         conv_signal = np.convolve(window, image_layer)
 
-        # 偏移量计算（因为卷积结果对应窗口右侧位置）
+        # 偏移量计算
         offset = window_width / 2
         l_min_index = int(max(l_center + offset - margin, 0))
         l_max_index = int(min(l_center + offset + margin, image.shape[1]))
@@ -63,7 +77,8 @@ def find_window_centroids(image, window_width, window_height, margin):
         r_min_index = int(max(r_center + offset - margin, 0))
         r_max_index = int(min(r_center + offset + margin, image.shape[1]))
         r_center = np.argmax(conv_signal[r_min_index:r_max_index]) + r_min_index - offset
-        # 添加该层找到的位置
+
+        # 添加在该层找到的索引
         window_centroids.append((l_center, r_center))
 
     return window_centroids

@@ -83,41 +83,86 @@ def dir_thresh(img, sobel_size=3, thresh=(0, np.pi / 2)):
     return binary
 
 
-def color_and_gradient(img, s_thresh=(170, 255), sx_thresh=(20, 100)):
-    hls_img = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
+use_s_channel_grad = True
+if use_s_channel_grad == False:
 
-    l_channel = hls_img[:, :, 1]
-    s_channel = hls_img[:, :, 2]
+    def color_and_gradient(img, s_thresh=(170, 255), sx_thresh=(20, 100)):
+        hls_img = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
 
-    # l通道检测水平方向梯度
-    sobelx = cv2.Sobel(l_channel, cv2.CV_64F, dx=1, dy=0)
-    abs_sobelx = np.abs(sobelx)
-    scaled_sobelx = np.uint8(abs_sobelx * 255 / np.max(abs_sobelx))
-    sobel_x_binary = np.zeros_like(scaled_sobelx)
-    sobel_x_binary[(scaled_sobelx >= sx_thresh[0]) & (scaled_sobelx <= sx_thresh[1])] = 1
+        l_channel = hls_img[:, :, 1]
+        s_channel = hls_img[:, :, 2]
 
-    # s通道检测颜色纯度
-    s_binary = np.zeros_like(s_channel)
-    s_binary[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
+        # l通道检测水平方向梯度
+        sobelx = cv2.Sobel(l_channel, cv2.CV_64F, dx=1, dy=0)
+        abs_sobelx = np.abs(sobelx)
+        scaled_sobelx = np.uint8(abs_sobelx * 255 / np.max(abs_sobelx))
+        sobel_x_binary = np.zeros_like(scaled_sobelx)
+        sobel_x_binary[(scaled_sobelx >= sx_thresh[0]) & (scaled_sobelx <= sx_thresh[1])] = 1
 
-    # 返回二值图片
-    combined = np.zeros_like(s_channel)
-    combined[(sobel_x_binary == 1) | (s_binary == 1)] = 1
+        # s通道检测颜色纯度
+        s_binary = np.zeros_like(s_channel)
+        s_binary[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
 
-    # combined = np.dstack((np.zeros_like(sobel_x_binary), sobel_x_binary, s_binary)) * 255
+        # 返回二值图片
+        combined = np.zeros_like(s_channel)
+        combined[(sobel_x_binary == 1) | (s_binary == 1)] = 1
 
-    if print_img == False:
-        f, (pic1, pic2, pic3) = plt.subplots(1, 3, figsize=(24, 9))
-        f.tight_layout()
-        pic1.set_title('combined')
-        pic1.imshow(combined)
-        pic2.set_title('l channel')
-        pic2.imshow(sobel_x_binary)
-        pic3.set_title('s channel')
-        pic3.imshow(s_binary)
-        plt.show()
+        # combined = np.dstack((np.zeros_like(sobel_x_binary), sobel_x_binary, s_binary)) * 255
 
-    return combined
+        if print_img == False:
+            f, (pic1, pic2, pic3) = plt.subplots(1, 3, figsize=(24, 9))
+            f.tight_layout()
+            pic1.set_title('combined')
+            pic1.imshow(combined)
+            pic2.set_title('l channel')
+            pic2.imshow(sobel_x_binary)
+            pic3.set_title('s channel')
+            pic3.imshow(s_binary)
+            plt.show()
+
+        return combined
+else:
+    def color_and_gradient(img, s_thresh=(170, 255), sx_thresh=(20, 100),s_channel_grad_thresh=(15,100)):
+        hls_img = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
+
+        l_channel = hls_img[:, :, 1]
+        s_channel = hls_img[:, :, 2]
+
+        # l通道检测水平方向梯度
+        sobelx = cv2.Sobel(l_channel, cv2.CV_64F, dx=1, dy=0)
+        abs_sobelx = np.abs(sobelx)
+        scaled_sobelx = np.uint8(abs_sobelx * 255 / np.max(abs_sobelx))
+
+        l_channel_in_x_binary = np.zeros_like(scaled_sobelx)
+        l_channel_in_x_binary[(scaled_sobelx >= sx_thresh[0]) & (scaled_sobelx <= sx_thresh[1])] = 1
+
+        # s通道x方向的梯度
+        s_channel_in_x_grad = np.abs(cv2.Sobel(s_channel, cv2.CV_64F, dx=1, dy=0))
+        scaled_s_channel_in_x_grad = np.uint8(s_channel_in_x_grad * 255 / np.max(abs_sobelx))
+        s_channel_in_x_binary = np.zeros_like(scaled_s_channel_in_x_grad)
+        s_channel_in_x_binary[(scaled_s_channel_in_x_grad >= s_channel_grad_thresh[0]) & (scaled_s_channel_in_x_grad <= s_channel_grad_thresh[1])] = 1
+
+        # s通道检测颜色纯度
+        s_binary = np.zeros_like(s_channel)
+        s_binary[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
+
+        # 返回二值图片
+        combined = np.zeros_like(s_channel)
+        combined[(l_channel_in_x_binary == 1) | (s_binary == 1) | (s_channel_in_x_binary == 1) ] = 1
+        # combined = np.dstack((np.zeros_like(l_channel_in_x_binary), l_channel_in_x_binary, s_binary)) * 255
+
+        if print_img == False:
+            f, (pic1, pic2, pic3) = plt.subplots(1, 3, figsize=(24, 9))
+            f.tight_layout()
+            pic1.set_title('combined')
+            pic1.imshow(combined)
+            pic2.set_title('l channel')
+            pic2.imshow(l_channel_in_x_binary)
+            pic3.set_title('s channel')
+            pic3.imshow(s_binary)
+            plt.show()
+
+        return combined
 
 
 def binary_process_pipeline(img):
@@ -152,7 +197,7 @@ def binary_process_pipeline(img):
 if __name__ == "__main__":
     from calibration import calibrate
 
-    path = "IGNORE/test_images/*.jpg"
+    path = "IGNORE/test_images/test1.jpg"
 
     images = glob.glob(path)
 

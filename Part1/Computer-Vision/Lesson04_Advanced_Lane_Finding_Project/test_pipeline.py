@@ -5,6 +5,7 @@ if __name__ == "__main__":
     from binary_image import binary_process_pipeline
     from calibration import calibrate
     from perspective_transform import warper
+    from fit_lane import find_lane_pipe
 
     # 视频输入输出路径
     input_path = "IGNORE/project_video.mp4"
@@ -41,6 +42,7 @@ if __name__ == "__main__":
 
         # 透视变换
         warped = warper(binary)
+
 
         # 转换为三通道输出
         binary_uint8 = (warped * 255).astype(np.uint8)

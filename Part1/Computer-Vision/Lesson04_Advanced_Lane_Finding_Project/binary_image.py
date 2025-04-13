@@ -188,7 +188,7 @@ def binary_process_pipeline(img):
         pic_1.imshow(img)
 
         pic_2.set_title("binary image")
-        pic_2.imshow(combined)
+        pic_2.imshow(combined,cmap='gray')
         plt.show()
 
     return combined

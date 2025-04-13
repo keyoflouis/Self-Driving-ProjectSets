@@ -2,6 +2,8 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 
+print_img = True
+
 
 def lane_historgram(img):
     the_sumArr = np.sum(img[:img.shape[0], :img.shape[1]], axis=0)
@@ -54,7 +56,8 @@ def find_window_centroids(image, window_width, window_height, margin):
     return window_centroids
 
 
-def window_mask(width, height, img, center, level):
+def window_mask(width, height, img, center, level, pix_count_thresh=10):
+    '''返回生成的掩膜,设立窗口检测阈值'''
     output = np.zeros_like(img)
 
     # 窗口顶，底，左，右
@@ -64,10 +67,16 @@ def window_mask(width, height, img, center, level):
     piece_right = int(center + width / 2)
 
     output[piece_top:piece_btm, max(0, piece_left):min(piece_right, img.shape[1])] = 1
+
+    # 暂时作为中心检测阈值的替代
+    valid_pixels = np.sum(output & img)
+    if valid_pixels <= pix_count_thresh:
+        output[:, :] = 0
+
     return output
 
 
-def get_window_pixel(window_width, window_height, image, window_centroids):
+def gene_window(window_width, window_height, image, window_centroids):
     if len(window_centroids) > 0:
 
         # 掩膜上的所有窗口为1
@@ -77,51 +86,107 @@ def get_window_pixel(window_width, window_height, image, window_centroids):
         for level in range(0, len(window_centroids)):
             l_mask = window_mask(window_width, window_height, image, window_centroids[level][0], level)
             r_mask = window_mask(window_width, window_height, image, window_centroids[level][1], level)
-            l_point[(l_point == 255) | (l_mask == 1)] = 255
-            r_point[(r_point == 255) | (r_mask == 1)] = 255
+            l_point[(l_point == 1) | (l_mask == 1)] = 1
+            r_point[(r_point == 1) | (r_mask == 1)] = 1
 
         # 合并左右车道中心点到一张图片中
         template = np.array(l_point + r_point, np.uint8)
+        output = (l_point, r_point)
 
-        zero_channel = np.zeros_like(template)  # 创建一个零颜色通道
-        template = np.array(cv2.merge((zero_channel, template, zero_channel)), np.uint8)  # 将窗口像素设置为绿色
-        warpage = np.dstack((warped, warped, warped)) * 255  # 将原始道路像素转换为3个颜色通道
-        output = cv2.addWeighted(warpage, 1, template, 0.5, 0.0)  # 将原始道路图像与窗口结果叠加
-
+        if print_img == False:
+            zero_channel = np.zeros_like(template)  # 创建一个零颜色通道
+            template_de = np.array(cv2.merge((zero_channel, template, zero_channel)), np.uint8)  # 将窗口像素设置为绿色
+            warpage = np.dstack((warped, warped, warped)) * 255  # 将原始道路像素转换为3个颜色通道
+            output_de = cv2.addWeighted(warpage, 1, template_de, 0.5, 0.0)  # 将原始道路图像与窗口结果叠加
+            plt.imshow(output_de)
+            plt.show()
     else:
         print("无中心点")
 
     return output
 
 
-def fit_lane(img):
+def find_lane_pixel(image, mask):
+    masked_image = np.zeros_like(image)
+
+    masked_image[(image[:, :] == 1) & (mask == 1)] = 1
+
+    if print_img == False:
+        f, (img, msk, msk_img) = plt.subplots(1, 3)
+        f.tight_layout()
+        img.set_title("image")
+        img.imshow(image)
+
+        msk.set_title("mask")
+        msk.imshow(mask)
+
+        msk_img.imshow(masked_image)
+
+        plt.show()
+
+    y_coords, x_coords = np.nonzero(masked_image)
+
+    return y_coords, x_coords
+
+
+def fit_lane(y, x, image):
+    fit = np.polyfit(y, x, 2)
+    ploty = np.linspace(0, image.shape[0] - 1, image.shape[0])
+    fit_x = fit[0] * ploty ** 2 + fit[1] * ploty + fit[2]
+
+    return fit_x
+
+
+def find_lane_pipe(img):
     window_width = 50
     window_height = 80
-    margin = 100
+    margin = 120
 
+    out_put = np.copy(img)
+
+    # 找到车道线中心点
     window_centroids = find_window_centroids(img, window_width, window_height, margin)
 
-    out = get_window_pixel(window_width, window_height, img, window_centroids)
+    # 生成窗口掩膜图层
+    (left_mask, right_mask) = gene_window(window_width, window_height, img, window_centroids)
 
-    plt.imshow(out)
-    plt.show()
+    # 找到左右车道线的像素
+    left_y, left_x = find_lane_pixel(img, left_mask)
+    right_y, right_x = find_lane_pixel(img, right_mask)
 
-    return
+    fit_left = fit_lane(left_y, left_x, img)
+    fit_right = fit_lane(right_y, right_x, img)
+
+    if print_img == True:
+
+        out_put[left_y, left_x] = 1
+        out_put[right_y, right_x] = 1
+        ploty = np.linspace(0, img.shape[0] - 1, img.shape[0])
+
+        plt.plot(fit_left, ploty, color="blue")
+        plt.plot(fit_right, ploty, color="blue")
+
+        plt.imshow(out_put,cmap="gray")
+        plt.show()
+
+    return out_put
 
 
 if __name__ == "__main__":
     from calibration import calibrate
-    from binary_image import binary_process_pipeline
+    from binary_image import binary_process_pipeline, print_img
     from perspective_transform import warper
+    import glob
 
     # test1 ,test4
-    path = "IGNORE/test_images/test1.jpg"
-    img = cv2.imread(path)
+    path = "IGNORE/test_images/*.jpg"
 
-    cal_img = calibrate(img)
-    binary = binary_process_pipeline(cal_img)
-    warped = warper(binary)
+    images = glob.glob(path)
 
-    fit_lane(warped)
+    for img_path in images:
+        img = cv2.imread(img_path)
+        cal_img = calibrate(img)
+        binary = binary_process_pipeline(cal_img)
+        warped = warper(binary)
 
-    pass
+        find_lane_pipe(warped)

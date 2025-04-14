@@ -10,21 +10,18 @@ def lane_historgram(img):
     return the_sumArr
 
 
-def find_window_centroids(image, window_width, window_height, margin, l_center=None, r_center=None, thresh=10):
+def find_window_centroids(image, window_width, window_height, margin, l_center=None, r_center=None):
     ''' 找到左右车道线的中心点 '''
 
     window_centroids = []
     window = np.ones(window_width)
-    offset = int(window_width / 2)
+    offset = window_width / 2
 
     # 定义底部的高，中间部分的x
     piece_top_y = int(3 * image.shape[0] / 4)
     piece_mid_x = int(image.shape[1] / 2)
 
-    # 使用上一帧拟合的多项式来计算得到l_center和r_center，如果没有上一帧，或中心点附近的像素很少，则重新计算center
-    if (((l_center is None) or (r_center is None))
-            or (np.sum(image[piece_top_y:, (l_center - margin):(l_center + margin)]) < thresh)
-            or (np.sum(image[piece_top_y:, (r_center - margin):(r_center + margin)]) < thresh)):
+    if (l_center is None) or (r_center is None):
         # 寻找图片底部左半部分的车道线中心点
         l_sum = lane_historgram(image[piece_top_y:, :piece_mid_x])
         conv_l = np.convolve(window, l_sum)
@@ -54,22 +51,6 @@ def find_window_centroids(image, window_width, window_height, margin, l_center=N
         r_min_index = int(max(r_center + offset - margin, 0))
         r_max_index = int(min(r_center + offset + margin, image.shape[1]))
         r_center = np.argmax(conv_signal[r_min_index:r_max_index]) + r_min_index - offset
-
-        if ((np.sum(image[piece_top_y:, (l_center - margin):(l_center + margin)]) < thresh)
-                or (np.sum(image[piece_top_y:, (r_center - margin):(r_center + margin)]) < thresh)):
-
-            # 重新卷积计算
-            l_sum = lane_historgram(image[piece_top_y:piece_btm_y, :piece_mid_x])
-            conv_l = np.convolve(window, l_sum)
-            l_center = np.argmax(conv_l) - offset
-
-            r_sum = lane_historgram(image[piece_top_y:piece_btm_y, piece_mid_x:])
-            conv_r = np.convolve(window, r_sum)
-            r_center = np.argmax(conv_r) - offset + piece_mid_x
-
-            # if ( ((np.sum(image[piece_top_y:, (l_center - margin):(l_center + margin)]) < thresh)
-            #     | (np.sum(image[piece_top_y:, (r_center - margin):(r_center + margin)]) < thresh))):
-
 
         window_centroids.append((l_center, r_center))
 
@@ -154,43 +135,20 @@ def fit_lane(y, x, image):
     return fit
 
 
-def draw_line(input_img, left_fit, right_fit):
-    # 画出曲线
-    process_frame = (input_img * 255).astype(np.uint8)
-    out_put_frame = cv2.cvtColor(process_frame, cv2.COLOR_GRAY2BGR)
-
-    # 生成拟合曲线坐标点
-    ploty = np.linspace(0, input_img.shape[0] - 1, input_img.shape[0])
-    if left_fit is not None and right_fit is not None:
-        left_fitx = left_fit[0] * ploty ** 2 + left_fit[1] * ploty + left_fit[2]
-        right_fitx = right_fit[0] * ploty ** 2 + right_fit[1] * ploty + right_fit[2]
-
-        # 限制坐标范围并转换为整数
-        left_fitx = np.clip(left_fitx, 0, input_img.shape[1] - 1).astype(int)
-        right_fitx = np.clip(right_fitx, 0, input_img.shape[1] - 1).astype(int)
-        ploty = ploty.astype(int)
-
-        # 创建点坐标数组
-        left_points = np.array([list(zip(left_fitx, ploty))], dtype=np.int32)
-        right_points = np.array([list(zip(right_fitx, ploty))], dtype=np.int32)
-
-        # 绘制曲线（红色左车道，绿色右车道）
-        cv2.polylines(out_put_frame, left_points, isClosed=False, color=(0, 0, 255), thickness=5)
-        cv2.polylines(out_put_frame, right_points, isClosed=False, color=(0, 255, 0), thickness=5)
-
-    return out_put_frame
-
-
 def find_lane_pipe(img, left_fit=None, right_fit=None):
     window_width = 50
     window_height = 80
-    margin = 100
+    margin = 120
 
+    out_put = np.copy(img)
     if (left_fit is None) or (right_fit is None):
+
         window_centroids = find_window_centroids(img, window_width, window_height, margin)
     else:
-        l_center = int(left_fit[0] * (img.shape[0] ** 2) + left_fit[1] * img.shape[0] + left_fit[2])
-        r_center = int(right_fit[0] * (img.shape[0] ** 2) + right_fit[1] * img.shape[0] + right_fit[2])
+
+        l_center = left_fit[0] * (img.shape[0] ** 2) + left_fit[1] * img.shape[0] + left_fit[2]
+
+        r_center = right_fit[0] * (img.shape[0] ** 2) + right_fit[1] * img.shape[0] + right_fit[2]
 
         # 找到车道线中心点
         window_centroids = find_window_centroids(img, window_width, window_height, margin, l_center, r_center)
@@ -206,9 +164,7 @@ def find_lane_pipe(img, left_fit=None, right_fit=None):
     left_fit = fit_lane(left_y, left_x, img)
     right_fit = fit_lane(right_y, right_x, img)
 
-    out_put_frame = draw_line(img, left_fit, right_fit)
-
-    return out_put_frame, (left_fit, right_fit)
+    return out_put, (left_fit, right_fit)
 
 
 def process_video(video_path, output_path):
@@ -233,7 +189,29 @@ def process_video(video_path, output_path):
         warped = warper(binary)
         process_frame, (left_fit, right_fit) = find_lane_pipe(warped, left_fit, right_fit)
 
-        out_put_frame = restore_perspective(process_frame)
+        process_frame = (process_frame * 255).astype(np.uint8)
+        out_put_frame = cv2.cvtColor(process_frame, cv2.COLOR_GRAY2BGR)
+
+        # 生成拟合曲线坐标点
+        ploty = np.linspace(0, warped.shape[0] - 1, warped.shape[0])
+        if left_fit is not None and right_fit is not None:
+            left_fitx = left_fit[0] * ploty ** 2 + left_fit[1] * ploty + left_fit[2]
+            right_fitx = right_fit[0] * ploty ** 2 + right_fit[1] * ploty + right_fit[2]
+
+            # 限制坐标范围并转换为整数
+            left_fitx = np.clip(left_fitx, 0, frame_width - 1).astype(int)
+            right_fitx = np.clip(right_fitx, 0, frame_width - 1).astype(int)
+            ploty = ploty.astype(int)
+
+            # 创建点坐标数组
+            left_points = np.array([list(zip(left_fitx, ploty))], dtype=np.int32)
+            right_points = np.array([list(zip(right_fitx, ploty))], dtype=np.int32)
+
+            # 绘制曲线（红色左车道，绿色右车道）
+            cv2.polylines(out_put_frame, left_points, isClosed=False, color=(0, 0, 255), thickness=5)
+            cv2.polylines(out_put_frame, right_points, isClosed=False, color=(0, 255, 0), thickness=5)
+
+        out_put_frame = restore_perspective(out_put_frame)
         out.write(out_put_frame)
 
     cap.release()
@@ -246,25 +224,6 @@ if __name__ == "__main__":
     from binary_image import binary_process_pipeline, print_img
     from perspective_transform import warper, restore_perspective
     import glob
-
-    # # test1 ,test4
-    # path = "IGNORE/test_images/*.jpg"
-    #
-    # images = glob.glob(path)
-    #
-    # for img_path in images:
-    #     # 处理图片
-    #     img = cv2.imread(img_path)
-    #     cal_img = calibrate(img)
-    #     binary = binary_process_pipeline(cal_img)
-    #     warped = warper(binary)
-    #
-    #     out, (left_fit, right_fit) = find_lane_pipe(warped)
-    #
-    #     out = restore_perspective(out)
-    #     cv2.imshow(img_path, out)
-    #     cv2.waitKey(0)
-    #     cv2.destroyAllWindows()
 
     path = "IGNORE/project_video.mp4"
     output_path = "./gene.mp4"

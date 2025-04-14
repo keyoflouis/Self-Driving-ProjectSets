@@ -41,7 +41,9 @@ def gene_pkl():
 
 
 def calibrate(img):
-    ''' 读取图片，返回相机矫正后的RGB图片 '''
+    ''' 读取BRG图片，返回相机矫正后的RGB图片 '''
+
+    # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     with open('IGNORE/output_images/calibration.pkl', 'rb') as f:
         cal = pickle.load(f)
@@ -66,6 +68,9 @@ def calibrate(img):
 
 if __name__ =="__main__":
 
-    # path = "IGNORE/test_images/test6.jpg"
-    # calibrate(path)
-    gene_pkl()
+    path = "IGNORE/test_images/test6.jpg"
+
+    img = cv2.imread(path)
+
+    calibrate(img)
+    #gene_pkl()

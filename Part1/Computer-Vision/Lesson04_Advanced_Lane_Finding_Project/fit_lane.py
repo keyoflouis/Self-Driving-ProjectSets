@@ -10,7 +10,7 @@ def lane_historgram(img):
     return the_sumArr
 
 
-def find_window_centroids(image, window_width, window_height, margin, l_center=None, r_center=None, thresh=10):
+def find_window_centroids(image, window_width, window_height, margin, l_center=None, r_center=None, thresh=20):
     ''' 找到左右车道线的中心点 '''
 
     window_centroids = []
@@ -38,6 +38,10 @@ def find_window_centroids(image, window_width, window_height, margin, l_center=N
     # 添加中心到列表，并基于上一次的车道线中心进行循环迭代
     window_centroids.append((l_center, r_center))
     for level in range(1, int(image.shape[0] / window_height)):
+
+        before_l_center = l_center
+        before_r_center = r_center
+
         # 窗口的顶部，底部，以及中间点
         piece_top_y = int(image.shape[0] - (level + 1) * window_height)
         piece_btm_y = int(image.shape[0] - level * window_height)
@@ -67,11 +71,14 @@ def find_window_centroids(image, window_width, window_height, margin, l_center=N
             conv_r = np.convolve(window, r_sum)
             r_center = np.argmax(conv_r) - offset + piece_mid_x
 
-            # if ( ((np.sum(image[piece_top_y:, (l_center - margin):(l_center + margin)]) < thresh)
-            #     | (np.sum(image[piece_top_y:, (r_center - margin):(r_center + margin)]) < thresh))):
+            if (((np.sum(image[piece_top_y:, (l_center - margin):(l_center + margin)]) < thresh)
+                 or (np.sum(image[piece_top_y:, (r_center - margin):(r_center + margin)]) < thresh))):
+                window_centroids.append((before_l_center, before_r_center))
+            else:
+                window_centroids.append((l_center, r_center))
 
-
-        window_centroids.append((l_center, r_center))
+        else:
+            window_centroids.append((l_center, r_center))
 
     return window_centroids
 

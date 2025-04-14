@@ -9,7 +9,7 @@ print_img = True
 
 
 def abs_sobel_thresh(img, orient='x', thresh=(0, 255)):
-    '''返回x/y方向的梯度'''
+    '''传入RGB 返回x/y方向的梯度'''
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     if orient == 'x':
         sobel = cv2.Sobel(gray, cv2.CV_64F, dx=1, dy=0)
@@ -37,7 +37,7 @@ def abs_sobel_thresh(img, orient='x', thresh=(0, 255)):
 
 
 def mag_thresh(img, ksize=3, thresh=(0, 255)):
-    ''' 计算图像梯度值 '''
+    '''传入RGB 计算图像梯度值 '''
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
     sobelx = cv2.Sobel(gray, cv2.CV_64F, dx=1, dy=0, ksize=ksize)
@@ -61,7 +61,7 @@ def mag_thresh(img, ksize=3, thresh=(0, 255)):
 
 
 def dir_thresh(img, sobel_size=3, thresh=(0, np.pi / 2)):
-    '''返回梯度方向夹角'''
+    '''传入RGB 返回梯度方向夹角'''
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     kernel_sobel_x = cv2.Sobel(gray, cv2.CV_64F, dx=1, dy=0, ksize=sobel_size)
     kernel_sobel_y = cv2.Sobel(gray, cv2.CV_64F, dx=0, dy=1, ksize=sobel_size)
@@ -122,7 +122,9 @@ if use_s_channel_grad == False:
 
         return combined
 else:
-    def color_and_gradient(img, s_thresh=(170, 255), sx_thresh=(20, 100),s_channel_grad_thresh=(15,100)):
+    def color_and_gradient(img, s_thresh=(170, 255), sx_thresh=(20, 100), s_channel_grad_thresh=(15, 100)):
+        ''' 传入RGB 返回纯度与l，s梯度阈值 '''
+
         hls_img = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
 
         l_channel = hls_img[:, :, 1]
@@ -140,7 +142,8 @@ else:
         s_channel_in_x_grad = np.abs(cv2.Sobel(s_channel, cv2.CV_64F, dx=1, dy=0))
         scaled_s_channel_in_x_grad = np.uint8(s_channel_in_x_grad * 255 / np.max(abs_sobelx))
         s_channel_in_x_binary = np.zeros_like(scaled_s_channel_in_x_grad)
-        s_channel_in_x_binary[(scaled_s_channel_in_x_grad >= s_channel_grad_thresh[0]) & (scaled_s_channel_in_x_grad <= s_channel_grad_thresh[1])] = 1
+        s_channel_in_x_binary[(scaled_s_channel_in_x_grad >= s_channel_grad_thresh[0]) & (
+                    scaled_s_channel_in_x_grad <= s_channel_grad_thresh[1])] = 1
 
         # s通道检测颜色纯度
         s_binary = np.zeros_like(s_channel)
@@ -148,7 +151,7 @@ else:
 
         # 返回二值图片
         combined = np.zeros_like(s_channel)
-        combined[(l_channel_in_x_binary == 1) | (s_binary == 1) | (s_channel_in_x_binary == 1) ] = 1
+        combined[(l_channel_in_x_binary == 1) | (s_binary == 1) | (s_channel_in_x_binary == 1)] = 1
         # combined = np.dstack((np.zeros_like(l_channel_in_x_binary), l_channel_in_x_binary, s_binary)) * 255
 
         if print_img == False:
@@ -188,7 +191,7 @@ def binary_process_pipeline(img):
         pic_1.imshow(img)
 
         pic_2.set_title("binary image")
-        pic_2.imshow(combined,cmap='gray')
+        pic_2.imshow(combined, cmap='gray')
         plt.show()
 
     return combined
@@ -206,4 +209,7 @@ if __name__ == "__main__":
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = calibrate(img)  # 返回矫正后的RGB图片
 
-        binary_process_pipeline(img)
+        img = binary_process_pipeline(img)
+
+        plt.imshow(img,cmap="gray")
+        plt.show()

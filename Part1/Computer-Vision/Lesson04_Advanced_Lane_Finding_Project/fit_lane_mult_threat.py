@@ -226,6 +226,6 @@ if __name__ == "__main__":
     import glob
 
     path = "IGNORE/project_video.mp4"
-    output_path = "./gene.mp4"
+    output_path = "gene_err.mp4"
 
     process_video(path, output_path)

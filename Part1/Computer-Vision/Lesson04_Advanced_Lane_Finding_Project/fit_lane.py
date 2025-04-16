@@ -22,7 +22,7 @@ def find_window_centroids(image, window_width, window_height, margin, l_center=N
     piece_mid_x = int(image.shape[1] / 2)
 
     # 使用上一帧拟合的多项式来计算得到l_center和r_center，如果没有上一帧，或中心点附近的像素很少，则重新计算center
-    if (((l_center is None) or (r_center is None))
+    if (((l_center is None) or (r_center is None) or (l_center >= r_center))
             or (np.sum(image[piece_top_y:, (l_center - margin):(l_center + margin)]) < thresh)
             or (np.sum(image[piece_top_y:, (r_center - margin):(r_center + margin)]) < thresh)):
         # 寻找图片底部左半部分的车道线中心点
@@ -53,14 +53,36 @@ def find_window_centroids(image, window_width, window_height, margin, l_center=N
         # 重新获取左右车道线的中心
         l_min_index = int(max(l_center + offset - margin, 0))
         l_max_index = int(min(l_center + offset + margin, image.shape[1]))
-        l_center = np.argmax(conv_signal[l_min_index:l_max_index]) + l_min_index - offset
 
         r_min_index = int(max(r_center + offset - margin, 0))
         r_max_index = int(min(r_center + offset + margin, image.shape[1]))
-        r_center = np.argmax(conv_signal[r_min_index:r_max_index]) + r_min_index - offset
+        try:
+            l_center = np.argmax(conv_signal[l_min_index:l_max_index]) + l_min_index - offset
+            r_center = np.argmax(conv_signal[r_min_index:r_max_index]) + r_min_index - offset
+        except ValueError as e:
+            print("检测失败，重新计算中点")
+            # 重新卷积计算
+            l_sum = lane_historgram(image[piece_top_y:piece_btm_y, :piece_mid_x])
+            conv_l = np.convolve(window, l_sum)
+            l_center = np.argmax(conv_l) - offset
+
+            r_sum = lane_historgram(image[piece_top_y:piece_btm_y, piece_mid_x:])
+            conv_r = np.convolve(window, r_sum)
+            r_center = np.argmax(conv_r) - offset + piece_mid_x
+
+            if (((np.sum(image[piece_top_y:, (l_center - margin):(l_center + margin)]) < thresh)
+                 and (np.sum(image[piece_top_y:, (r_center - margin):(r_center + margin)]) < thresh))
+                or (l_center >= r_center)
+            ):
+                window_centroids.append((before_l_center, before_r_center))
+            else:
+                window_centroids.append((l_center, r_center))
+
 
         if ((np.sum(image[piece_top_y:, (l_center - margin):(l_center + margin)]) < thresh)
-                or (np.sum(image[piece_top_y:, (r_center - margin):(r_center + margin)]) < thresh)):
+                or (np.sum(image[piece_top_y:, (r_center - margin):(r_center + margin)]) < thresh)
+                or (l_center >= r_center)
+        ):
 
             # 重新卷积计算
             l_sum = lane_historgram(image[piece_top_y:piece_btm_y, :piece_mid_x])
@@ -72,7 +94,9 @@ def find_window_centroids(image, window_width, window_height, margin, l_center=N
             r_center = np.argmax(conv_r) - offset + piece_mid_x
 
             if (((np.sum(image[piece_top_y:, (l_center - margin):(l_center + margin)]) < thresh)
-                 or (np.sum(image[piece_top_y:, (r_center - margin):(r_center + margin)]) < thresh))):
+                 and (np.sum(image[piece_top_y:, (r_center - margin):(r_center + margin)]) < thresh))
+                or (l_center >= r_center)
+            ):
                 window_centroids.append((before_l_center, before_r_center))
             else:
                 window_centroids.append((l_center, r_center))
@@ -189,6 +213,7 @@ def draw_line(input_img, left_fit, right_fit):
 
 
 def find_lane_pipe(img, left_fit=None, right_fit=None):
+    '''处理单帧的图片'''
     window_width = 50
     window_height = 80
     margin = 100
@@ -215,10 +240,14 @@ def find_lane_pipe(img, left_fit=None, right_fit=None):
 
     out_put_frame = draw_line(img, left_fit, right_fit)
 
+    #out_put_frame = (out_put_frame * 255).astype(np.uint8)
+    #out_put_frame = cv2.cvtColor(out_put_frame, cv2.COLOR_GRAY2BGR)
+
     return out_put_frame, (left_fit, right_fit)
 
 
 def process_video(video_path, output_path):
+    '''输入地址，输出地址，存储视频到输出地址'''
     cap = cv2.VideoCapture(video_path)
 
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -235,12 +264,22 @@ def process_video(video_path, output_path):
         if not ret:
             break
 
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
         frame = calibrate(frame)
+
+        frame = gaussian_blur(frame)
+
         binary = binary_process_pipeline(frame)
+
         warped = warper(binary)
+
         process_frame, (left_fit, right_fit) = find_lane_pipe(warped, left_fit, right_fit)
 
         out_put_frame = restore_perspective(process_frame)
+        # plt.imshow(out_put_frame)
+        # plt.show()
+
         out.write(out_put_frame)
 
     cap.release()
@@ -250,7 +289,7 @@ def process_video(video_path, output_path):
 
 if __name__ == "__main__":
     from calibration import calibrate
-    from binary_image import binary_process_pipeline, print_img
+    from binary_image import binary_process_pipeline, print_img, gaussian_blur
     from perspective_transform import warper, restore_perspective
     import glob
 
@@ -262,18 +301,34 @@ if __name__ == "__main__":
     # for img_path in images:
     #     # 处理图片
     #     img = cv2.imread(img_path)
+    #     img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+    #
     #     cal_img = calibrate(img)
+    #     gaus_img = gaussian_blur(cal_img,kerner_size=3)
+    #
     #     binary = binary_process_pipeline(cal_img)
+    #     gause_binary = binary_process_pipeline(gaus_img)
+    #
     #     warped = warper(binary)
+    #     gause_warped = warper(gause_binary)
     #
     #     out, (left_fit, right_fit) = find_lane_pipe(warped)
+    #     gause_out, (left_fit, right_fit) = find_lane_pipe(gause_warped)
     #
     #     out = restore_perspective(out)
-    #     cv2.imshow(img_path, out)
-    #     cv2.waitKey(0)
-    #     cv2.destroyAllWindows()
+    #     gause_out = restore_perspective(gause_out)
+    #
+    #     f, (pic1, pic2) = plt.subplots(1, 2)
+    #     f.tight_layout()
+    #
+    #     pic1.set_title("raw out")
+    #     pic2.set_title("gause_out")
+    #
+    #     pic1.imshow(out)
+    #     pic2.imshow(gause_out, cmap="gray")
+    #     plt.show()
 
     path = "IGNORE/project_video.mp4"
-    output_path = "./gene.mp4"
+    output_path = "gene.mp4"
 
     process_video(path, output_path)

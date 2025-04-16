@@ -22,8 +22,18 @@ thresholds = (
 
 color_select[thresholds] = [0, 0, 0]
 
-plt.imshow(color_select)
+f, ((pic_1, pic_2), (pic_3, pic_4)) = plt.subplots(2, 2)
+f.tight_layout()
+pic_1.set_title("r")
+pic_1.imshow(color_select[:,:,0])
+
+pic_2.set_title("g")
+pic_2.imshow(color_select[:,:,1])
+
+pic_3.set_title("b")
+pic_3.imshow(color_select[:,:,2])
+
+pic_4.set_title("raw")
+pic_4.imshow(image)
+
 plt.show()
-
-
-

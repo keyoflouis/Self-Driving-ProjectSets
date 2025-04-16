@@ -41,7 +41,7 @@ def gene_pkl():
 
 
 def calibrate(img):
-    ''' 读取BRG图片，返回相机矫正后的RGB图片 '''
+    ''' 读取RGB图片，返回相机矫正后的RGB图片 '''
 
     # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 

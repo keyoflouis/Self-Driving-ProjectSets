@@ -90,6 +90,24 @@ def dir_thresh(img, sobel_size=3, thresh=(0, np.pi / 2)):
     return binary
 
 
+def region_mask(img):
+    mask = np.zeros_like(img)
+    vertices = np.array([[(0, img.shape[0]),
+                         (int(img.shape[1] * 2 / 5), int(img.shape[0] * 3 / 5)),
+                         (int(img.shape[1] * 3 / 5), int(img.shape[0] * 3 / 5)),
+                         (img.shape[1], img.shape[0])]])
+    intrest = 255
+
+    cv2.fillPoly(mask, vertices, intrest)
+
+    img = cv2.bitwise_and(img, mask)
+
+    # plt.imshow(img)
+    # plt.show()
+
+    return img
+
+
 use_s_channel_grad = True
 if use_s_channel_grad == False:
 
@@ -239,6 +257,8 @@ def binary_process_pipeline(img):
     temp_dir_mag[(dir_binary == 1) & (mag_binary == 1)] = 1
 
     combined[(temp_sobx_soby == 1) | (temp_dir_mag == 1) | (color_binary == 1)] = 1
+
+    combined = region_mask(combined)
 
     if print_binary_result == True:
         f, ((pic_1, pic_2), (pic_3, pic_4)) = plt.subplots(2, 2)

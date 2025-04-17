@@ -17,92 +17,89 @@ def find_window_centroids(image, window_width, window_height, margin, l_center=N
     window = np.ones(window_width)
     offset = int(window_width / 2)
 
-    # 定义底部的高，中间部分的x
+    def _ensure_the_center(image, piece_top_y, piece_btm_y, piece_mid_x, l_center=None, r_center=None,
+                           thresh=thresh):
+        ''' 传入piece的顶部，底部，中点，左右center
+
+            如果center附近的像素个数小于thresh，或center为None，或左center的x值大于等于右center的x值
+            则重新计算center
+        '''
+
+        # 从头寻找中点
+        if ((l_center is None) or (r_center is None)
+                or (l_center >= r_center)
+                or (np.sum(image[piece_top_y:piece_btm_y, (l_center - margin):(l_center + margin)]) < thresh)
+                or (np.sum(image[piece_top_y:piece_btm_y, (r_center - margin):(r_center + margin)]) < thresh)
+        ):
+            # 左半部分,车道线中心点
+            l_sum = lane_historgram(image[piece_top_y:piece_btm_y, :piece_mid_x])
+            conv_l = np.convolve(window, l_sum)
+            l_center = np.argmax(conv_l) - offset
+
+            # 右半部分,车道线中心点
+            r_sum = lane_historgram(image[piece_top_y:piece_btm_y, piece_mid_x:])
+            conv_r = np.convolve(window, r_sum)
+            r_center = np.argmax(conv_r) - offset + piece_mid_x
+
+        return l_center, r_center
+
+    def _ensure_the_center_from_pred(image, piece_top_y, piece_btm_y, piece_mid_x, l_center=None, r_center=None,
+                                     thresh=thresh):
+        '''  传入piece的顶部，底部，中点，左右center
+
+             依赖上一次的center（可能是上一帧的预测，也可能是上一个piece实际值），
+             在滑动窗口区域内寻找中点
+        '''
+        if ((l_center is None) or (r_center is None)
+                or (l_center >= r_center)
+                or (np.sum(image[piece_top_y:piece_btm_y, (l_center - margin):(l_center + margin)]) < thresh)
+                or (np.sum(image[piece_top_y:piece_btm_y, (r_center - margin):(r_center + margin)]) < thresh)
+        ):
+            l_center, r_center = _ensure_the_center(image, piece_top_y, piece_btm_y, piece_mid_x, l_center, r_center,
+                                                    thresh)
+
+        if (l_center is not None) and (r_center is not None):
+            # piece 内像素统计
+            piece_hist = lane_historgram(image[piece_top_y:piece_btm_y, :])
+            conv_signal = np.convolve(window, piece_hist)
+
+            # 在滑动窗口覆盖区域的全部像素列表中，寻找左右车道线的中心
+            l_min_index = int(max(l_center + offset - margin, 0))
+            l_max_index = int(min(l_center + offset + margin, image.shape[1]))
+            r_min_index = int(max(r_center + offset - margin, 0))
+            r_max_index = int(min(r_center + offset + margin, image.shape[1]))
+
+            # 如果依赖上一次的中点，，，计算错误时，使用原始的办法来计算当前窗口。
+            if (l_min_index < l_max_index) and (l_max_index < r_min_index) and (r_min_index < r_max_index):
+                l_center = np.argmax(conv_signal[l_min_index:l_max_index]) + l_min_index - offset
+                r_center = np.argmax(conv_signal[r_min_index:r_max_index]) + r_min_index - offset
+            else:
+                l_center, r_center = _ensure_the_center(image, piece_top_y, piece_btm_y, piece_mid_x, l_center,
+                                                        r_center, thresh)
+
+        return l_center, r_center
+
+    # 图片垂直分4层,首先处理最底部的piece
     piece_top_y = int(3 * image.shape[0] / 4)
+    piece_btm_y = int(image.shape[0])
     piece_mid_x = int(image.shape[1] / 2)
 
-    # 使用上一帧拟合的多项式来计算得到l_center和r_center，如果没有上一帧，或中心点附近的像素很少，则重新计算center
-    if (((l_center is None) or (r_center is None) or (l_center >= r_center))
-            or (np.sum(image[piece_top_y:, (l_center - margin):(l_center + margin)]) < thresh)
-            or (np.sum(image[piece_top_y:, (r_center - margin):(r_center + margin)]) < thresh)):
-        # 寻找图片底部左半部分的车道线中心点
-        l_sum = lane_historgram(image[piece_top_y:, :piece_mid_x])
-        conv_l = np.convolve(window, l_sum)
-        l_center = np.argmax(conv_l) - offset
-
-        # 寻找图片底部右半部分的车道线中心点
-        r_sum = lane_historgram(image[piece_top_y:, piece_mid_x:])
-        conv_r = np.convolve(window, r_sum)
-        r_center = np.argmax(conv_r) - offset + piece_mid_x
-
-    # 添加中心到列表，并基于上一次的车道线中心进行循环迭代
+    # 找到第一张图片底部的center,或确保预测的center的位置正确。
+    l_center, r_center = _ensure_the_center_from_pred(image, piece_top_y, piece_btm_y, piece_mid_x, l_center, r_center,
+                                                      thresh)
     window_centroids.append((l_center, r_center))
+
+    # 基于上一次的车道线中心进行循环迭代
     for level in range(1, int(image.shape[0] / window_height)):
-
-        before_l_center = l_center
-        before_r_center = r_center
-
-        # 窗口的顶部，底部，以及中间点
+        # 当前piece 顶部，底部，以及中间点
         piece_top_y = int(image.shape[0] - (level + 1) * window_height)
         piece_btm_y = int(image.shape[0] - level * window_height)
         piece_mid_x = int(image.shape[1] / 2)
 
-        image_layer = lane_historgram(image[piece_top_y:piece_btm_y, :])
-        conv_signal = np.convolve(window, image_layer)
+        l_center, r_center = _ensure_the_center_from_pred(image, piece_top_y, piece_btm_y, piece_mid_x, l_center,
+                                                          r_center, thresh)
 
-        # 重新获取左右车道线的中心
-        l_min_index = int(max(l_center + offset - margin, 0))
-        l_max_index = int(min(l_center + offset + margin, image.shape[1]))
-
-        r_min_index = int(max(r_center + offset - margin, 0))
-        r_max_index = int(min(r_center + offset + margin, image.shape[1]))
-        try:
-            l_center = np.argmax(conv_signal[l_min_index:l_max_index]) + l_min_index - offset
-            r_center = np.argmax(conv_signal[r_min_index:r_max_index]) + r_min_index - offset
-        except ValueError as e:
-            print("检测失败，重新计算中点")
-            # 重新卷积计算
-            l_sum = lane_historgram(image[piece_top_y:piece_btm_y, :piece_mid_x])
-            conv_l = np.convolve(window, l_sum)
-            l_center = np.argmax(conv_l) - offset
-
-            r_sum = lane_historgram(image[piece_top_y:piece_btm_y, piece_mid_x:])
-            conv_r = np.convolve(window, r_sum)
-            r_center = np.argmax(conv_r) - offset + piece_mid_x
-
-            if (((np.sum(image[piece_top_y:, (l_center - margin):(l_center + margin)]) < thresh)
-                 and (np.sum(image[piece_top_y:, (r_center - margin):(r_center + margin)]) < thresh))
-                or (l_center >= r_center)
-            ):
-                window_centroids.append((before_l_center, before_r_center))
-            else:
-                window_centroids.append((l_center, r_center))
-
-
-        if ((np.sum(image[piece_top_y:, (l_center - margin):(l_center + margin)]) < thresh)
-                or (np.sum(image[piece_top_y:, (r_center - margin):(r_center + margin)]) < thresh)
-                or (l_center >= r_center)
-        ):
-
-            # 重新卷积计算
-            l_sum = lane_historgram(image[piece_top_y:piece_btm_y, :piece_mid_x])
-            conv_l = np.convolve(window, l_sum)
-            l_center = np.argmax(conv_l) - offset
-
-            r_sum = lane_historgram(image[piece_top_y:piece_btm_y, piece_mid_x:])
-            conv_r = np.convolve(window, r_sum)
-            r_center = np.argmax(conv_r) - offset + piece_mid_x
-
-            if (((np.sum(image[piece_top_y:, (l_center - margin):(l_center + margin)]) < thresh)
-                 and (np.sum(image[piece_top_y:, (r_center - margin):(r_center + margin)]) < thresh))
-                or (l_center >= r_center)
-            ):
-                window_centroids.append((before_l_center, before_r_center))
-            else:
-                window_centroids.append((l_center, r_center))
-
-        else:
-            window_centroids.append((l_center, r_center))
+        window_centroids.append((l_center, r_center))
 
     return window_centroids
 
@@ -240,8 +237,8 @@ def find_lane_pipe(img, left_fit=None, right_fit=None):
 
     out_put_frame = draw_line(img, left_fit, right_fit)
 
-    #out_put_frame = (out_put_frame * 255).astype(np.uint8)
-    #out_put_frame = cv2.cvtColor(out_put_frame, cv2.COLOR_GRAY2BGR)
+    # out_put_frame = (out_put_frame * 255).astype(np.uint8)
+    # out_put_frame = cv2.cvtColor(out_put_frame, cv2.COLOR_GRAY2BGR)
 
     return out_put_frame, (left_fit, right_fit)
 

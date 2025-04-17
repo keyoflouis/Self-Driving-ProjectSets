@@ -10,7 +10,8 @@ def lane_historgram(img):
     return the_sumArr
 
 
-def find_window_centroids(image, window_width, window_height, margin, l_center=None, r_center=None, thresh=20):
+def find_window_centroids(image, window_width, window_height, margin, l_center=None, r_center=None, thresh=20,
+                          road_width_thresh=450, pointchange_thresh=150):
     ''' 找到左右车道线的中心点 '''
 
     window_centroids = []
@@ -18,7 +19,7 @@ def find_window_centroids(image, window_width, window_height, margin, l_center=N
     offset = int(window_width / 2)
 
     def _ensure_the_center(image, piece_top_y, piece_btm_y, piece_mid_x, l_center=None, r_center=None,
-                           thresh=thresh):
+                           thresh=thresh, road_width_thresh=road_width_thresh):
         ''' 传入piece的顶部，底部，中点，左右center
 
             如果center附近的像素个数小于thresh，或center为None，或左center的x值大于等于右center的x值
@@ -27,7 +28,7 @@ def find_window_centroids(image, window_width, window_height, margin, l_center=N
 
         # 从头寻找中点
         if ((l_center is None) or (r_center is None)
-                or (l_center >= r_center)
+                or (abs(l_center - r_center) <= road_width_thresh)
                 or (np.sum(image[piece_top_y:piece_btm_y, (l_center - margin):(l_center + margin)]) < thresh)
                 or (np.sum(image[piece_top_y:piece_btm_y, (r_center - margin):(r_center + margin)]) < thresh)
         ):
@@ -44,21 +45,25 @@ def find_window_centroids(image, window_width, window_height, margin, l_center=N
         return l_center, r_center
 
     def _ensure_the_center_from_pred(image, piece_top_y, piece_btm_y, piece_mid_x, l_center=None, r_center=None,
-                                     thresh=thresh):
+                                     thresh=thresh, road_width_thresh=road_width_thresh,
+                                     pointchange_thresh=pointchange_thresh):
         '''  传入piece的顶部，底部，中点，左右center
 
              依赖上一次的center（可能是上一帧的预测，也可能是上一个piece实际值），
              在滑动窗口区域内寻找中点
         '''
         if ((l_center is None) or (r_center is None)
-                or (l_center >= r_center)
+                or (abs(l_center - r_center) <= road_width_thresh)
                 or (np.sum(image[piece_top_y:piece_btm_y, (l_center - margin):(l_center + margin)]) < thresh)
                 or (np.sum(image[piece_top_y:piece_btm_y, (r_center - margin):(r_center + margin)]) < thresh)
         ):
             l_center, r_center = _ensure_the_center(image, piece_top_y, piece_btm_y, piece_mid_x, l_center, r_center,
-                                                    thresh)
+                                                    thresh, road_width_thresh)
 
         if (l_center is not None) and (r_center is not None):
+            before_l_center = l_center
+            before_r_center = r_center
+
             # piece 内像素统计
             piece_hist = lane_historgram(image[piece_top_y:piece_btm_y, :])
             conv_signal = np.convolve(window, piece_hist)
@@ -74,8 +79,14 @@ def find_window_centroids(image, window_width, window_height, margin, l_center=N
                 l_center = np.argmax(conv_signal[l_min_index:l_max_index]) + l_min_index - offset
                 r_center = np.argmax(conv_signal[r_min_index:r_max_index]) + r_min_index - offset
             else:
-                l_center, r_center = _ensure_the_center(image, piece_top_y, piece_btm_y, piece_mid_x, l_center,
-                                                        r_center, thresh)
+                l_center, r_center = _ensure_the_center(image, piece_top_y, piece_btm_y, piece_mid_x,
+                                                        l_center=None, r_center=None,
+                                                        thresh=thresh, road_width_thresh=road_width_thresh)
+        # 如果检测到的中点与上一帧差距过大，则沿用上一帧中点
+        if (abs(before_r_center - r_center) >= pointchange_thresh):
+            r_center = before_r_center
+        if (abs(before_l_center - l_center) >= pointchange_thresh):
+            l_center = before_l_center
 
         return l_center, r_center
 
@@ -86,7 +97,7 @@ def find_window_centroids(image, window_width, window_height, margin, l_center=N
 
     # 找到第一张图片底部的center,或确保预测的center的位置正确。
     l_center, r_center = _ensure_the_center_from_pred(image, piece_top_y, piece_btm_y, piece_mid_x, l_center, r_center,
-                                                      thresh)
+                                                      thresh, road_width_thresh)
     window_centroids.append((l_center, r_center))
 
     # 基于上一次的车道线中心进行循环迭代
@@ -97,7 +108,7 @@ def find_window_centroids(image, window_width, window_height, margin, l_center=N
         piece_mid_x = int(image.shape[1] / 2)
 
         l_center, r_center = _ensure_the_center_from_pred(image, piece_top_y, piece_btm_y, piece_mid_x, l_center,
-                                                          r_center, thresh)
+                                                          r_center, thresh, road_width_thresh)
 
         window_centroids.append((l_center, r_center))
 
@@ -212,8 +223,8 @@ def draw_line(input_img, left_fit, right_fit):
 def find_lane_pipe(img, left_fit=None, right_fit=None):
     '''处理单帧的图片'''
     window_width = 50
-    window_height = 80
-    margin = 100
+    window_height = int(720 / 7)
+    margin = 80
 
     if (left_fit is None) or (right_fit is None):
         window_centroids = find_window_centroids(img, window_width, window_height, margin)

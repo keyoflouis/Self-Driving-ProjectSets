@@ -92,10 +92,13 @@ def dir_thresh(img, sobel_size=3, thresh=(0, np.pi / 2)):
 
 def region_mask(img):
     mask = np.zeros_like(img)
-    vertices = np.array([[(0, img.shape[0]),
-                         (int(img.shape[1] * 2 / 5), int(img.shape[0] * 3 / 5)),
-                         (int(img.shape[1] * 3 / 5), int(img.shape[0] * 3 / 5)),
-                         (img.shape[1], img.shape[0])]])
+
+    hood = 20
+
+    vertices = np.array([[(0, img.shape[0] - hood),
+                          (int(img.shape[1] * 2 / 5), int((img.shape[0] - hood) * 3 / 5)),
+                          (int(img.shape[1] * 3 / 5), int((img.shape[0] - hood) * 3 / 5)),
+                          (img.shape[1], img.shape[0])]])
     intrest = 255
 
     cv2.fillPoly(mask, vertices, intrest)

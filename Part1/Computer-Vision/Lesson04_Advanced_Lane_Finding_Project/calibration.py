@@ -72,5 +72,7 @@ if __name__ =="__main__":
 
     img = cv2.imread(path)
 
+    img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+
     calibrate(img)
     #gene_pkl()

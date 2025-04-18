@@ -60,6 +60,8 @@ def find_window_centroids(image, window_width, window_height, margin, l_center=N
             l_center, r_center = _ensure_the_center(image, piece_top_y, piece_btm_y, piece_mid_x, l_center, r_center,
                                                     thresh, road_width_thresh)
 
+            return l_center,r_center
+
         if (l_center is not None) and (r_center is not None):
             before_l_center = l_center
             before_r_center = r_center
@@ -82,11 +84,11 @@ def find_window_centroids(image, window_width, window_height, margin, l_center=N
                 l_center, r_center = _ensure_the_center(image, piece_top_y, piece_btm_y, piece_mid_x,
                                                         l_center=None, r_center=None,
                                                         thresh=thresh, road_width_thresh=road_width_thresh)
-        # 如果检测到的中点与上一帧差距过大，则沿用上一帧中点
-        if (abs(before_r_center - r_center) >= pointchange_thresh):
-            r_center = before_r_center
-        if (abs(before_l_center - l_center) >= pointchange_thresh):
-            l_center = before_l_center
+            # 如果检测到的中点与上一帧差距过大，则沿用上一帧中点
+            if (abs(before_r_center - r_center) >= pointchange_thresh):
+                r_center = before_r_center
+            if (abs(before_l_center - l_center) >= pointchange_thresh):
+                l_center = before_l_center
 
         return l_center, r_center
 
@@ -163,6 +165,20 @@ def gene_window(window_width, window_height, image, window_centroids):
         print("无中心点")
 
     return output
+
+
+def draw_window(image, left_mask, right_mask):
+    '''输入BGR图片,返回绘制图片'''
+
+    left_mask = np.array(left_mask, np.uint8) * 255
+    right_mask = np.array(right_mask, np.uint8) * 255
+
+    mask = np.array(cv2.merge((np.zeros_like(left_mask), left_mask, right_mask)), np.uint8)
+
+
+    out_put = cv2.addWeighted(image, 1, mask, beta=0.5, gamma=0.0)
+
+    return out_put
 
 
 def find_lane_pixel(image, mask):
@@ -247,6 +263,8 @@ def find_lane_pipe(img, left_fit=None, right_fit=None):
     right_fit = fit_lane(right_y, right_x, img)
 
     out_put_frame = draw_line(img, left_fit, right_fit)
+
+    out_put_frame = draw_window(out_put_frame,left_mask, right_mask)
 
     # out_put_frame = (out_put_frame * 255).astype(np.uint8)
     # out_put_frame = cv2.cvtColor(out_put_frame, cv2.COLOR_GRAY2BGR)

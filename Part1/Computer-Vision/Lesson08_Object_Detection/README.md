@@ -16,7 +16,7 @@
 
 - norm_shuffle.py 拼接hog特征和hsv颜色特征，标准化.
 
-- car_features.py 
+- car_features.py 使用空间颜色信息和颜色通道的分布直方图训练一个汽车分类器
 
 
 ----
@@ -54,7 +54,7 @@
 4. **`transform_sqrt`**：  
    - 可选参数，用于伽马归一化，可以减少光照变化的影响，但图像不能包含负值。
 
-5. **`visualise`**：  
+5. **`visualize`**：  
    - 布尔值，如果为`True`，则返回两个值，(hog_features, hog_image)，
    否则只返回hog_features
 

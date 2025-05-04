@@ -22,6 +22,7 @@ def get_hog_features(img, orient, pix_per_cell, cell_per_block, vis=True,
     当visualize=True时，第二项返回值为视觉化矩阵。
     """
 
+    # p20以及README中有详细讲解
     return_list = hog(img, orientations=orient, pixels_per_cell=(pix_per_cell, pix_per_cell),
                       cells_per_block=(cell_per_block, cell_per_block),
                       block_norm='L2-Hys', transform_sqrt=False,
@@ -50,8 +51,8 @@ features, hog_image = get_hog_features(gray, orient=9, pix_per_cell=8,cell_per_b
 fig = plt.figure()
 plt.subplot(121)  # 左子图：原始图像
 plt.imshow(image, cmap='gray')
-plt.title('示例车辆图像')
+plt.title('example')
 plt.subplot(122)  # 右子图：HOG可视化
 plt.imshow(hog_image, cmap='gray')
-plt.title('HOG特征可视化')
+plt.title('HOG feature vis')
 plt.show()

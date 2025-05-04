@@ -86,9 +86,9 @@ for image in images:
 
 # TODO 调整这些值，观察分类器在不同分箱场景下的表现
 spatial = 32
-histbin = 32
+histbin = 96
 
-car_features = extract_features(cars, cspace='HSV', spatial_size=(spatial, spatial),
+car_features = extract_features(cars, cspace='RGB', spatial_size=(spatial, spatial),
                                 hist_bins=histbin, hist_range=(0, 256))
 notcar_features = extract_features(notcars, cspace='RGB', spatial_size=(spatial, spatial),
                                    hist_bins=histbin, hist_range=(0, 256))

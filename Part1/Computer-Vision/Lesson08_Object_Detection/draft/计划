@@ -1,0 +1,29 @@
+1.对照保存的模型参数，是否有漏
+2.find cars函数
+
+---
+
+查看后感觉没有任何问题，但可以对hog_feature 具体的这个像素块，使用search_classify重新实现一遍hog。
+
+如果成功，则代表hog的展开与非展开输出这里有隐藏的问题
+
+
+---
+
+重写hog_subsample
+
+search_classify 训练的时候也没有将图像归一化，而是直接正则化
+
+hog_subsample 对图片进行了归一化然后正则化，但为什么归一化之后还能打印出完整图片,归一化之后的浮点数可以直接被matplot打印，但整形不能。
+
+归一化导致问题。
+
+为什么我在draft里面直接使用single_img_features会报错提示输出的shape不符合要求呢？
+
+---
+
+重写hog_subsample成功，去掉了归一化，目前识别效果不理想但能识别出车辆，后续打算加上归一化来训练svc。
+
+需要修改search_classify部分
+
+

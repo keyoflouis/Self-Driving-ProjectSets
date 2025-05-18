@@ -18,6 +18,18 @@
 
 - car_features.py 使用空间颜色信息和颜色通道的分布直方图训练一个汽车分类器
 
+- hog_classify.py 使用HOG信息训练一个汽车分类器
+
+- sliding_window.py 在图片中画出滑动窗口
+
+- lesson_functions.py 汇聚了所有search_classify中需要的所有此前写过的函数
+
+- search_classify.py 搜索sliding_window提供的窗口列表中是否存在车辆（HSV，HLS效果反而最糟糕？）
+
+  - 结合p34所讲，我可以尝试用多次不同尺寸的sliding_window来划分图片检测区域。
+  
+- hog_subsample.py 在不同的窗口搜索车辆的时候，每次都计算hog会引入很大的开销，
+于是一开始就对感兴趣的区域进行计算hog（官方给的模型依赖ski库的版本现已失效。）
 
 ----
 
@@ -30,7 +42,7 @@
 
 - 在HOG中，一个block内的归一化过程如下：
 
-- 首先计算block内所有cell的直方图连接起来形成一个长向量v
+- 首先计算block内所有cell的直方图,连接起来形成一个长向量v
 
 - 计算这个向量的L2范数：L2 = √(v₁² + v₂² + ... + vₙ²)
 

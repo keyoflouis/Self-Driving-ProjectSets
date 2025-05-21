@@ -24,6 +24,9 @@ hog_subsample 对图片进行了归一化然后正则化，但为什么归一化
 
 重写hog_subsample成功，去掉了归一化，目前识别效果不理想但能识别出车辆，后续打算加上归一化来训练svc。
 
-需要修改search_classify部分
+需要修改search_classify部分 
 
+hog_subsample_2.py 和 search_classify_2.py 归一化之后训练，但效果不佳。
+
+----
 

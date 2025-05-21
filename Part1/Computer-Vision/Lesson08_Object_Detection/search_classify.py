@@ -177,7 +177,7 @@ print('SVC 的测试准确率 = ', round(svc.score(X_test, y_test), 4))
 # 检查单个样本的预测时间
 t = time.time()
 
-save = False
+save = True
 
 if save:
     dist_pickle ={

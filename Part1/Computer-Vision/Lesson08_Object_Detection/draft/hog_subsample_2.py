@@ -20,6 +20,8 @@ img = mpimg.imread("../IGNORE/test_image.jpg")
 
 def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
     draw_image = np.copy(img)
+
+    img = img.astype(np.float32) / 255
     img_tosearch = img[ystart:ystop, :, :]
     ctrans_tosearch = convert_color(img_tosearch)
 
@@ -89,7 +91,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
 
 ystart = 400
 ystop =656
-scale = 1.25
+scale = 1
 
 img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
 

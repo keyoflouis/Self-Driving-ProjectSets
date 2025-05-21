@@ -29,7 +29,9 @@
   - 结合p34所讲，我可以尝试用多次不同尺寸的sliding_window来划分图片检测区域。
   
 - hog_subsample.py 在不同的窗口搜索车辆的时候，每次都计算hog会引入很大的开销，
-于是一开始就对感兴趣的区域进行计算hog（官方给的模型依赖ski库的版本现已失效。）
+于是一开始就对感兴趣的区域进行计算hog
+（官方给的pickle文件依赖scikit库的版本，在新版的scikit中现已失效。该版本基于search_classify的模型，去除了官方对图片的归一化，draft的search_classify尝试用归一化训练svc效果不佳）
+
 
 ----
 

@@ -10,6 +10,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import LinearSVC
 import matplotlib.pyplot as plt
 
+
 def convert_color(img, conv='RGB2YCrCb'):
     if conv == 'RGB2YCrCb':
         return cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
@@ -18,24 +19,25 @@ def convert_color(img, conv='RGB2YCrCb'):
     if conv == 'RGB2LUV':
         return cv2.cvtColor(img, cv2.COLOR_RGB2LUV)
 
+
 def bin_spatial(img, size=(32, 32)):
     '''
-    
+
     降采样，展平为一维特征数组
-    
+
     '''
     return cv2.resize(img, size).ravel()
 
 
 def color_hist(img, nbins=32, bins_range=(0, 256)):
     '''
-    
+
     统计图像各通道的分布直方图
-    
+
     :param nbins:直方数量
-    
+
     :param bins_range: 只统计阈值内
-    
+
     '''
 
     channel1_hist = np.histogram(img[:, :, 0], bins=nbins, range=bins_range)
@@ -70,7 +72,7 @@ def get_hog_features(img, orient, pix_per_cell, cell_per_block, vis=False, featu
                                   cells_per_block=(cell_per_block, cell_per_block),
                                   transform_sqrt=True,
                                   visualize=vis, feature_vector=feature_vec)
-        return features ,hog_image
+        return features, hog_image
 
     else:
         features = hog(img, orientations=orient,
@@ -113,6 +115,7 @@ def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
     for file in imgs:
         file_features = []
         image = mpimg.imread(file)
+        image = image.astype(np.float32)/255
 
         if color_space != "RGB":
             if color_space == "HSV":
@@ -151,6 +154,7 @@ def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
         features.append(np.concatenate(file_features))
 
     return features
+
 
 def single_img_features(img, color_space='RGB', spatial_size=(32, 32),
                         hist_bins=32, orient=9,
@@ -200,6 +204,7 @@ def single_img_features(img, color_space='RGB', spatial_size=(32, 32),
     # 9) 返回连接后的特征数组
     return np.concatenate(img_features)
 
+
 def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None], xy_window=(64, 64), xy_overlap=(0.5, 0.5)):
     if x_start_stop[0] == None:
         x_start_stop[0] = 0
@@ -215,15 +220,15 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None], xy_w
     yspan = y_start_stop[1] - y_start_stop[0]
 
     # 计算x/y方向步长
-    nx_pix_per_step  = int(xy_window[0]*(1-xy_overlap[0]))
-    ny_pix_per_step = int(xy_window[1]*(1-xy_overlap[1]))
-    
+    nx_pix_per_step = int(xy_window[0] * (1 - xy_overlap[0]))
+    ny_pix_per_step = int(xy_window[1] * (1 - xy_overlap[1]))
+
     # 计算x/y方向有多少个窗口
     nx_buffer = int(xy_window[0] * (xy_overlap[0]))
     ny_buffer = int(xy_window[1] * (xy_overlap[1]))
     nx_windows = int((xspan - nx_buffer) / nx_pix_per_step)
     ny_windows = int((yspan - ny_buffer) / ny_pix_per_step)
-    
+
     # 存储窗口位置的window_list
     window_list = []
     for ys in range(ny_windows):
@@ -234,24 +239,28 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None], xy_w
             starty = ys * ny_pix_per_step + y_start_stop[0]
             endy = starty + xy_window[1]
             # 添加到列表中
-            window_list.append(((startx, starty), (endx, endy)))    
+            window_list.append(((startx, starty), (endx, endy)))
 
     return window_list
 
-def draw_boxes(img,bboxes,color=(0,0,255),thick=6):
+
+def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
     imcopy = np.copy(img)
     for bbox in bboxes:
-        cv2.rectangle(imcopy,bbox[0],bbox[1],color,thick)
+        cv2.rectangle(imcopy, bbox[0], bbox[1], color, thick)
 
     return imcopy
 
+
 def search_windows(img, windows, clf, scaler, color_space='RGB', spatial_size=(32, 32), hist_bins=32,
-                   hist_range=(0, 256), orient=9, pix_per_cell=8, cell_per_block=2,hog_channel=0,
-                  spatial_feat=True, hist_feat=True, hog_feat=True):
+                   hist_range=(0, 256), orient=9, pix_per_cell=8, cell_per_block=2, hog_channel=0,
+                   spatial_feat=True, hist_feat=True, hog_feat=True):
     ''' 传入图片，寻找车辆所在的窗口 '''
 
     # 1) 创建一个空列表来接收检测到的正窗口
     on_windows = []
+
+    img = img.astype(np.float32) /255
 
     # 2) 遍历列表中的所有窗口
     for window in windows:
@@ -273,7 +282,6 @@ def search_windows(img, windows, clf, scaler, color_space='RGB', spatial_size=(3
         if prediction == 1:
             on_windows.append(window)
     return on_windows
-
 
 
 if __name__ == "__main__":

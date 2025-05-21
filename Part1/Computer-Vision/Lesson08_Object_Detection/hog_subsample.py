@@ -42,7 +42,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
     #img = img.astype(np.float32) / 255
 
     img_tosearch = img[ystart:ystop, :, :]
-    ctrans_tosearch = convert_color(img_tosearch, conv='RGB2YCrCb')
+    ctrans_tosearch = convert_color(img_tosearch, conv='RGB2LUV')
 
     # 缩放图片
     if scale != 1:
@@ -102,9 +102,6 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
 
             # 截取当前窗口图像块
             subimg = cv2.resize(ctrans_tosearch[ytop:ytop + window, xleft:xleft + window], (64, 64))
-
-            # TODO: 对subimg直接使用hog求特征值，再输入分类器。
-            #  若成功则代表hog的展开与非展开有隐藏问题。
 
             # f ,((win1,win2),(win3,win4) )= plt.subplots(2,2,figsize=(19.2, 10.8))
             # f.tight_layout()

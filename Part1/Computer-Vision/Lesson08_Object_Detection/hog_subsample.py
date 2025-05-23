@@ -32,7 +32,7 @@ print(f'orient:{orient} ,'
       f'spatial_size: {spatial_size} ,'
       f'hist_bins: {hist_bins} ')
 
-img = mpimg.imread('./IGNORE/bbox-example-image.jpg')
+img = mpimg.imread('./IGNORE/test_image.jpg')
 
 
 # 定义一个集成函数：通过HOG子采样提取特征并进行预测
@@ -42,7 +42,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
     #img = img.astype(np.float32) / 255
 
     img_tosearch = img[ystart:ystop, :, :]
-    ctrans_tosearch = convert_color(img_tosearch, conv='RGB2LUV')
+    ctrans_tosearch = convert_color(img_tosearch, conv='RGB2YCrCb')
 
     # 缩放图片
     if scale != 1:
@@ -135,7 +135,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
 
 ystart = 400
 ystop = 656
-scale = 1.5
+scale = 1.25
 
 out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size,
                     hist_bins)

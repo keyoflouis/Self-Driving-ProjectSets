@@ -1,4 +1,5 @@
 import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 from skimage.feature import hog
@@ -36,7 +37,7 @@ def get_hog_features(img, orient, pix_per_cell, cell_per_block,
 
 
 # Define a function to compute binned color features
-def bin_spatial(img, size=(32, 32)):
+def     bin_spatial(img, size=(32, 32)):
     # Use cv2.resize().ravel() to create the feature vector
     features = cv2.resize(img, size).ravel()
     # Return the feature vector
@@ -122,6 +123,9 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None], xy_w
         y_start_stop[0] = 0
     if y_start_stop[1] == None:
         y_start_stop[1] = img.shape[0]
+
+    plt.imshow(img[y_start_stop[0]:y_start_stop[1],x_start_stop[0]:x_start_stop[1],:])
+    plt.show()
 
     # 计算需要被搜索的区域的尺寸
     xspan = x_start_stop[1] - x_start_stop[0]

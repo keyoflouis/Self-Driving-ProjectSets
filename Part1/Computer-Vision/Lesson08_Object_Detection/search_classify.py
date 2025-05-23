@@ -121,12 +121,12 @@ for image in images:
 
 # 减少样本大小，因为
 # 测验评估器在 CPU 时间超过 13 秒后会超时
-sample_size = 500
-cars = cars[0:sample_size]
-notcars = notcars[0:sample_size]
+# sample_size = 2000
+# cars = cars[0:sample_size]
+# notcars = notcars[0:sample_size]
 
 ### TODO：调整这些参数并观察结果变化。
-color_space = 'LUV'  # 可以是 RGB, HSV, LUV, HLS, YUV, YCrCb
+color_space = 'YCrCb'  # 可以是 RGB, HSV, LUV, HLS, YUV, YCrCb
 orient = 9  # HOG 方向数
 pix_per_cell = 8  # HOG 每个单元的像素数
 cell_per_block = 2  # HOG 每个块的单元数
@@ -194,7 +194,7 @@ if save:
         pickle.dump(dist_pickle, f)
 
 
-image = mpimg.imread('./IGNORE/bbox-example-image.jpg')
+image = mpimg.imread('./IGNORE/test_image.jpg')
 draw_image = np.copy(image)
 
 # 如果你从 .png 图像（通过 mpimg 缩放到 0 到 1）中提取训练数据，
@@ -205,6 +205,9 @@ draw_image = np.copy(image)
 
 windows = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop, xy_window=(96, 96),
                        xy_overlap=(0.5, 0.5))
+test_image=draw_boxes(np.copy(image),windows,color=(0,0,255),thick=6)
+plt.imshow(test_image)
+plt.show()
 
 hot_windows = search_windows(image, windows, svc, X_scaler, color_space=color_space,
                              spatial_size=spatial_size, hist_bins=hist_bins,

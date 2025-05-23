@@ -57,19 +57,19 @@ heat = add_heat(heat, box_list)
 # 应用阈值处理以帮助消除误检
 heat = apply_threshold(heat, 1)
 
-# 显示时对热力图进行可视化处理
 heatmap = np.clip(heat, 0, 255)
 
 # 使用label函数从热力图中找出最终边界框
 labels = label(heatmap)
+
 draw_img = draw_labeled_bboxes(np.copy(image), labels)
 
 fig = plt.figure()
 plt.subplot(121)
 plt.imshow(draw_img)
-plt.title('车辆位置')
+plt.title('position')
 plt.subplot(122)
 plt.imshow(heatmap, cmap='hot')
-plt.title('热力图')
+plt.title('heatmap')
 fig.tight_layout()
 plt.show()

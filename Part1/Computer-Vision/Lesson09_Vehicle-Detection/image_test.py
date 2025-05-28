@@ -28,7 +28,7 @@ def find_cars_heatmap(img, ystart, ystop, scale, p_data: pickle_data):
     ''' 返回车辆热力图 '''
 
     # 热力图
-    draw_image = np.zeros_like(img[:,:,0])
+    draw_image = np.zeros_like(img[:, :, 0])
     img_tosearch = img[ystart:ystop, :, :]
     ctrans_tosearch = convert_color(img_tosearch)
 
@@ -126,10 +126,16 @@ def draw_labeled_bboxes(img, labels):
     return img
 
 
-def image_pip(path,ystart, ystop, scale, p_data: pickle_data, threshold=1):
+def image_pip(path, p_data: pickle_data, threshold=1):
+    ''' 图像处理管道 '''
+
     image = mpimg.imread(path)
 
+    ystart = 400
+    ystop = 656
+
     # 找到车辆热力图
+    scale = 1.5
     img = find_cars_heatmap(image, ystart, ystop, scale, p_data)
 
     # 限制热力图数值
@@ -147,14 +153,11 @@ def image_pip(path,ystart, ystop, scale, p_data: pickle_data, threshold=1):
 if __name__ == "__main__":
     p_data = pickle_data("output_images/svc_pickle.p")
 
-    ystart = 400
-    ystop = 656
-    scale = 1.5
     start_path = "test_images"
 
-    for root ,_,files in os.walk(start_path):
-        for file in files :
-            path = os.path.join(start_path,file)
-            img = image_pip(path,ystart, ystop, scale, p_data)
+    for root, _, files in os.walk(start_path):
+        for file in files:
+            path = os.path.join(start_path, file)
+            img = image_pip(path, p_data)
             plt.imshow(img)
             plt.show()

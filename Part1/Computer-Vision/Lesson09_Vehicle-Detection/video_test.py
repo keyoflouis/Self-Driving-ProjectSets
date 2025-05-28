@@ -1,10 +1,11 @@
 import cv2
+import matplotlib.pyplot as plt
 
 from image_test import *
 
 
 
-def process_video(video_path,output_path,p_data,threshold=1):
+def process_video(video_path,output_path,p_data,threshold=7):
     ''' 视频处理管道 '''
 
     cap =cv2.VideoCapture(video_path)
@@ -14,7 +15,8 @@ def process_video(video_path,output_path,p_data,threshold=1):
 
     fource =cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(output_path,fource,fps,(frame_width,frame_height))
-
+    ystart = 400
+    ystop = 656
 
     while cap.isOpened():
         ret,frame  = cap.read()
@@ -22,7 +24,23 @@ def process_video(video_path,output_path,p_data,threshold=1):
             break
 
         # 找到车辆热力图
+        scale = 1.75
         img = find_cars_heatmap(frame, ystart, ystop, scale, p_data)
+
+        scale = 1.5
+        img += find_cars_heatmap(frame, ystart, ystop, scale, p_data)
+
+        scale = 1.25
+        img += find_cars_heatmap(frame, ystart, ystop, scale, p_data)
+
+        scale = 1
+        img += find_cars_heatmap(frame, ystart, ystop, scale, p_data)
+
+        scale = 0.75
+        img += find_cars_heatmap(frame, ystart, ystop, scale, p_data)
+
+        scale = 0.5
+        img += find_cars_heatmap(frame, ystart, ystop, scale, p_data)
 
         # 限制热力图数值
         img = apply_threshold(img, threshold)
@@ -40,9 +58,7 @@ def process_video(video_path,output_path,p_data,threshold=1):
 
 if __name__ == "__main__":
 
-    ystart = 400
-    ystop = 656
-    scale = 1.5
+
     video_path = "test_video.mp4"
     output_path = "output_images/output_video.mp4"
 

@@ -5,6 +5,7 @@ from image_test import *
 
 
 def process_video(video_path,output_path,p_data,threshold=1):
+    ''' 视频处理管道 '''
 
     cap =cv2.VideoCapture(video_path)
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))

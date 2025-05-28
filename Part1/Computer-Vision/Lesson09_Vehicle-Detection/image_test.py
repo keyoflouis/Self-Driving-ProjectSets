@@ -25,6 +25,8 @@ def convert_color(img, conv="RGB2YCrCb"):
 
 
 def find_cars_heatmap(img, ystart, ystop, scale, p_data: pickle_data):
+    ''' 返回车辆热力图 '''
+
     # 热力图
     draw_image = np.zeros_like(img[:,:,0])
     img_tosearch = img[ystart:ystop, :, :]
@@ -101,12 +103,16 @@ def find_cars_heatmap(img, ystart, ystop, scale, p_data: pickle_data):
 
 
 def apply_threshold(heat, threshold):
+    ''' 处理热力图为（0 - 255），并用阈值过滤 '''
+
     heat[heat <= threshold] = 0
     heatmap = np.clip(heat, 0, 255)
     return heatmap
 
 
 def draw_labeled_bboxes(img, labels):
+    ''' 遍历label找到框的左上角和右下角 '''
+
     for car_number in range(1, labels[1] + 1):
         # 找到当前车辆编号对应的所有像素点
         nonzero = (labels[0] == car_number).nonzero()

@@ -1,18 +1,7 @@
 import cv2
 import matplotlib.image as mpimg
-
 from train import *
 
-dist_pickle = pickle.load(open("./output_images/svc_pickle.p","rb"))
-svc = dist_pickle["svc"]
-X_scaler = dist_pickle["scaler"]
-orient = dist_pickle["orient"]
-pix_per_cell = dist_pickle["pix_per_cell"]
-cell_per_block = dist_pickle["cell_per_block"]
-spatial_size = dist_pickle["spatial_size"]
-hist_bins = dist_pickle["hist_bins"]
-
-img =mpimg.imread("test_images/test1.jpg")
 
 def convert_color(img,conv="RGB2YCrCb"):
 
@@ -90,11 +79,25 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
 
     return draw_image
 
-ystart = 400
-ystop =656
-scale = 1.25
+if __name__ == "__main__":
 
-img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
 
-plt.imshow(img)
-plt.show()
+    dist_pickle = pickle.load(open("./output_images/svc_pickle.p", "rb"))
+    svc = dist_pickle["svc"]
+    X_scaler = dist_pickle["scaler"]
+    orient = dist_pickle["orient"]
+    pix_per_cell = dist_pickle["pix_per_cell"]
+    cell_per_block = dist_pickle["cell_per_block"]
+    spatial_size = dist_pickle["spatial_size"]
+    hist_bins = dist_pickle["hist_bins"]
+
+    img = mpimg.imread("test_images/test1.jpg")
+
+    ystart = 400
+    ystop =656
+    scale = 1.25
+
+    img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+
+    plt.imshow(img)
+    plt.show()

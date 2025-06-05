@@ -25,10 +25,13 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None]):
     # 计算 x 和 y 方向的跨度
     xspan = x_start_stop[1] - x_start_stop[0]  # 常量
     yspan = y_start_stop[1] - y_start_stop[0]  # 常量
+    
     nx_buffer = (window_sizes * x_overlaps).astype(int)  # 向量
+    
     # 计算滑动步长和窗口数量
     nx_pix_per_steps = (window_sizes*(1 - x_overlaps)).astype(int)  # 向量
     nx_windows = ((xspan - nx_buffer)/nx_pix_per_steps).astype(int)  # 向量
+    
     ny_window = len(window_sizes)  # 常量
     ny_pix_per_step = int(yspan / ny_window + 1)  # 常量
 

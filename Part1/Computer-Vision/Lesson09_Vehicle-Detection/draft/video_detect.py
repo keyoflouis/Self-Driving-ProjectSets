@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from detect import *
+from image_detect import *
 
 class HeatMap():
     def __init__(self):

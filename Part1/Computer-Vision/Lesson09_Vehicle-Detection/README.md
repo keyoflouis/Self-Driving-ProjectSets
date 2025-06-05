@@ -7,3 +7,8 @@
 - video_test.py 视频处理管道
 
 - draft 文件夹尝试别人的实现
+   
+  - train.py 训练
+  - test.py 查看HSV的h通道的颜色直方图，ysv的hog特征
+  - image_detect.py 检测图片
+  - video_detect.py 检测视频

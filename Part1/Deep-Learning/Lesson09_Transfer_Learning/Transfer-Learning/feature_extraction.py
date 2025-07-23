@@ -11,7 +11,7 @@ def load_bottleneck_data(training_file,validation_file):
         参数:
             training_file - 字符串
             validation_file - 字符串
-        """
+    """
     print("训练文件", training_file)
     print("验证文件", validation_file)
 
